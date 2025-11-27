@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { MacroNutrients } from "../types";
 
@@ -9,20 +8,22 @@ export const hasApiKey = (): boolean => {
 
 export const analyzeFoodWithGemini = async (
   input: string | { imageBase64: string, text?: string }
-): Promise<MacroNutrients & { name: string } | null> => {
-  if (!process.env.API_KEY) {
-    console.error("API Key is missing");
-    throw new Error("API Key is missing. Please ensure process.env.API_KEY is set.");
-  }
-
+): Promise<MacroNutrients & { name: string; portionEstimate?: string } | null> => {
+  // The API key must be obtained exclusively from the environment variable process.env.API_KEY.
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   let contents: any;
-  const promptSuffix = "Provide the food name in Traditional Chinese (繁體中文). If the quantity is not specified, assume a standard serving size.";
+  // Enhanced Prompt for Visual Estimation
+  const promptSuffix = `
+    1. Identify the food name in Traditional Chinese (繁體中文).
+    2. Visually estimate the portion size and weight (grams) of the food based on the image (e.g., relative to plate size).
+    3. Calculate total calories/macros based on this specific estimated portion, NOT a standard serving.
+    4. Provide the portion description in Traditional Chinese (e.g., "約 200g 白飯, 150g 炸雞腿").
+  `;
   
   if (typeof input === 'string') {
     // Text-only mode
-    contents = `Analyze the following food item/meal and provide the estimated nutritional information. ${promptSuffix}
+    contents = `Analyze the following food item description. ${promptSuffix}
       Food description: "${input}"`;
   } else {
     // Image mode
@@ -36,7 +37,7 @@ export const analyzeFoodWithGemini = async (
       {
         text: input.text 
           ? `Analyze this image of food. The user also described it as: "${input.text}". ${promptSuffix}`
-          : `Analyze this image of food and identify what it is. ${promptSuffix}`
+          : `Analyze this image of food. ${promptSuffix}`
       }
     ];
     contents = { parts };
@@ -55,9 +56,13 @@ export const analyzeFoodWithGemini = async (
               type: Type.STRING,
               description: "A short, concise name of the identified food in Traditional Chinese (繁體中文)",
             },
+            portionEstimate: {
+              type: Type.STRING,
+              description: "A short description of estimated portion size/weight (e.g., '約 1碗飯, 100g 肉')",
+            },
             calories: {
               type: Type.NUMBER,
-              description: "Estimated total calories (kcal)",
+              description: "Estimated total calories (kcal) for the specific portion in the image",
             },
             protein: {
               type: Type.NUMBER,

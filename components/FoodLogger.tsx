@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { analyzeFoodWithGemini, hasApiKey } from '../services/geminiService';
 import { MacroNutrients, SavedFoodItem } from '../types';
@@ -26,8 +25,8 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
   const [savedFoods, setSavedFoods] = useState<SavedFoodItem[]>([]);
   const [filteredFoods, setFilteredFoods] = useState<SavedFoodItem[]>([]);
   
-  // AI Result State
-  const [aiResult, setAiResult] = useState<(MacroNutrients & { name: string }) | null>(null);
+  // AI Result State (Updated type to include portionEstimate)
+  const [aiResult, setAiResult] = useState<(MacroNutrients & { name: string; portionEstimate?: string }) | null>(null);
 
   // Manual Form State
   const [manualName, setManualName] = useState('');
@@ -63,7 +62,6 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
         } as SavedFoodItem));
 
       // Combine matches. 
-      // Note: We could deduplicate if names are identical, but simple list is fine for now.
       setFilteredFoods([...userMatches, ...staticMatches]);
 
     } else {
@@ -128,9 +126,14 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
 
   const handleConfirmAi = () => {
     if (aiResult) {
+      // Append estimate to name for history clarity if available
+      const displayName = aiResult.portionEstimate 
+        ? `${aiResult.name} (${aiResult.portionEstimate})`
+        : aiResult.name;
+
       // 1. Add to Log
       onAdd(
-        aiResult.name, 
+        displayName, 
         {
           calories: aiResult.calories,
           protein: aiResult.protein,
@@ -141,7 +144,14 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
       );
 
       // 2. Save to Personal Database (Only macros/name, not the image to save space)
-      StorageService.saveFoodToDatabase(userId, aiResult);
+      // Save clean name without the long estimate description for the database autocomplete
+      StorageService.saveFoodToDatabase(userId, {
+        name: aiResult.name, 
+        calories: aiResult.calories,
+        protein: aiResult.protein,
+        carbs: aiResult.carbs,
+        fat: aiResult.fat
+      });
     }
   };
 
@@ -169,7 +179,7 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
       carbs: food.carbs,
       fat: food.fat
     });
-    // Update usage count by re-saving (even if it came from static, we save it to personal now)
+    // Update usage count by re-saving
     StorageService.saveFoodToDatabase(userId, {
         name: food.name,
         calories: food.calories,
@@ -215,7 +225,7 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
                  <input 
                    type="file" 
                    accept="image/*" 
-                   // Removed capture="environment" to allow gallery selection
+                   // Removed capture to allow gallery selection
                    ref={fileInputRef}
                    className="hidden"
                    onChange={handleImageUpload}
@@ -248,7 +258,7 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
                         setInput(e.target.value);
                         setAiResult(null);
                       }}
-                      placeholder={selectedImage ? "Add description (optional)..." : "e.g. 雞胸肉 / 200g Chicken"}
+                      placeholder={selectedImage ? "Describe food (Optional)..." : "e.g. 雞胸肉"}
                       className="w-full border border-gray-300 rounded-lg pl-4 pr-12 py-3 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-sm text-lg"
                       onKeyDown={(e) => e.key === 'Enter' && handleAiAnalyze()}
                       autoFocus={!selectedImage}
@@ -267,7 +277,7 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
                  </div>
               </div>
 
-              {/* Suggestions / Database Results */}
+              {/* Suggestions */}
               {input && filteredFoods.length > 0 && !aiResult && !selectedImage && (
                 <div className="space-y-2 animate-fade-in">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Suggestions</p>
@@ -289,7 +299,6 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
                 </div>
               )}
 
-              {/* Empty State / Hints */}
               {!input && !loading && !aiResult && !selectedImage && (
                  <div className="text-center py-8">
                     {savedFoods.length > 0 ? (
@@ -309,7 +318,7 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
                       </div>
                     ) : (
                       <div className="text-gray-400 text-sm">
-                        <p>Type any food (e.g., 白飯, 雞胸肉) or upload a photo.</p>
+                        <p>Type any food or upload a photo for AI estimation.</p>
                       </div>
                     )}
                  </div>
@@ -320,11 +329,14 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
               {/* AI Result Card */}
               {aiResult && (
                 <div className="bg-emerald-50 p-5 rounded-xl border border-emerald-100 animate-fade-in shadow-sm">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                        <span className="text-xs font-bold text-emerald-600 uppercase tracking-wide">AI Estimate</span>
-                        <h3 className="font-bold text-xl text-gray-800">{aiResult.name}</h3>
-                    </div>
+                  <div className="mb-4">
+                    <span className="text-xs font-bold text-emerald-600 uppercase tracking-wide">AI Estimate</span>
+                    <h3 className="font-bold text-xl text-gray-800">{aiResult.name}</h3>
+                    {aiResult.portionEstimate && (
+                      <p className="text-sm text-emerald-800 mt-1 bg-emerald-100/50 p-2 rounded">
+                        ℹ️ {aiResult.portionEstimate}
+                      </p>
+                    )}
                   </div>
                   
                   <div className="grid grid-cols-4 gap-2 text-center text-sm mb-4">
@@ -361,7 +373,6 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
                  <input 
                    type="file" 
                    accept="image/*" 
-                   capture="environment"
                    ref={fileInputRef}
                    className="hidden"
                    onChange={handleImageUpload}
