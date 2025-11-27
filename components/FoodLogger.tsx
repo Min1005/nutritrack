@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import { analyzeFoodWithGemini, hasApiKey } from '../services/geminiService';
+import { analyzeFoodWithGemini, analyzeSingleIngredient, hasApiKey, IngredientItem } from '../services/geminiService';
 import { MacroNutrients, SavedFoodItem } from '../types';
 import { StorageService } from '../services/storageService';
 import { compressImage } from '../utils/imageUtils';
@@ -9,6 +10,11 @@ interface FoodLoggerProps {
   userId: string;
   onAdd: (name: string, macros: MacroNutrients, image?: string) => void;
   onCancel: () => void;
+}
+
+interface EditableIngredient extends IngredientItem {
+  id: string;
+  isLoading?: boolean;
 }
 
 const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
@@ -25,8 +31,9 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
   const [savedFoods, setSavedFoods] = useState<SavedFoodItem[]>([]);
   const [filteredFoods, setFilteredFoods] = useState<SavedFoodItem[]>([]);
   
-  // AI Result State (Updated type to include portionEstimate)
-  const [aiResult, setAiResult] = useState<(MacroNutrients & { name: string; portionEstimate?: string }) | null>(null);
+  // AI Result State - Now managing a list of ingredients
+  const [overallName, setOverallName] = useState('');
+  const [ingredients, setIngredients] = useState<EditableIngredient[]>([]);
 
   // Manual Form State
   const [manualName, setManualName] = useState('');
@@ -46,22 +53,19 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
     if (mode === 'ai' && input.trim() && !selectedImage) {
       const search = input.toLowerCase();
       
-      // 1. Search Personal Database (Saved by user)
       const userMatches = savedFoods.filter(food => 
         food.name.toLowerCase().includes(search)
       );
 
-      // 2. Search Static Common Database
       const staticMatches = Object.entries(commonFoodDatabase)
         .filter(([name]) => name.toLowerCase().includes(search))
         .map(([name, macros]) => ({
             id: `static-${name}`,
             name,
             ...macros,
-            timesUsed: 0 // Static items don't track usage count here
+            timesUsed: 0
         } as SavedFoodItem));
 
-      // Combine matches. 
       setFilteredFoods([...userMatches, ...staticMatches]);
 
     } else {
@@ -73,9 +77,10 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
     const file = e.target.files?.[0];
     if (file) {
       try {
-        const compressedBase64 = await compressImage(file, 600); // Compress to max width 600px
+        const compressedBase64 = await compressImage(file, 600);
         setSelectedImage(compressedBase64);
-        setAiResult(null); // Reset previous results
+        setIngredients([]); // Reset previous results
+        setOverallName('');
       } catch (err) {
         console.error("Error compressing image", err);
         setError("Failed to process image. Try a smaller one.");
@@ -86,14 +91,16 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
   const clearImage = () => {
     setSelectedImage(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
-    setAiResult(null);
+    setIngredients([]);
+    setOverallName('');
   };
 
   const handleAiAnalyze = async () => {
     if (!input.trim() && !selectedImage) return;
     setLoading(true);
     setError('');
-    setAiResult(null);
+    setIngredients([]);
+    setOverallName('');
 
     try {
       if (!hasApiKey()) {
@@ -105,15 +112,18 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
       
       let result;
       if (selectedImage) {
-        // Image analysis
         result = await analyzeFoodWithGemini({ imageBase64: selectedImage, text: input });
       } else {
-        // Text analysis
         result = await analyzeFoodWithGemini(input);
       }
       
-      if (result) {
-        setAiResult(result);
+      if (result && result.ingredients) {
+        setOverallName(result.name);
+        setIngredients(result.ingredients.map(ing => ({
+          ...ing,
+          id: Math.random().toString(36).substr(2, 9),
+          isLoading: false
+        })));
       } else {
         setError('Could not identify food. Please try again or use manual entry.');
       }
@@ -124,33 +134,79 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
     }
   };
 
+  const handleRecalculateRow = async (id: string, newName: string) => {
+    setIngredients(prev => prev.map(item => 
+      item.id === id ? { ...item, name: newName, isLoading: true } : item
+    ));
+
+    try {
+      const result = await analyzeSingleIngredient(newName);
+      if (result) {
+        setIngredients(prev => prev.map(item => 
+          item.id === id ? { ...item, ...result, name: newName, isLoading: false } : item
+        ));
+      } else {
+        setIngredients(prev => prev.map(item => 
+            item.id === id ? { ...item, isLoading: false } : item
+        ));
+      }
+    } catch (e) {
+      setIngredients(prev => prev.map(item => 
+        item.id === id ? { ...item, isLoading: false } : item
+      ));
+    }
+  };
+
+  const handleDeleteRow = (id: string) => {
+    setIngredients(prev => prev.filter(item => item.id !== id));
+  };
+
+  const handleAddRow = () => {
+    setIngredients(prev => [
+      ...prev,
+      {
+        id: Math.random().toString(36).substr(2, 9),
+        name: "New Item (e.g. 滷蛋)",
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+        isLoading: false
+      }
+    ]);
+  };
+
+  const calculateTotal = () => {
+    return ingredients.reduce((acc, curr) => ({
+      calories: acc.calories + curr.calories,
+      protein: acc.protein + curr.protein,
+      carbs: acc.carbs + curr.carbs,
+      fat: acc.fat + curr.fat,
+    }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+  };
+
   const handleConfirmAi = () => {
-    if (aiResult) {
-      // Append estimate to name for history clarity if available
-      const displayName = aiResult.portionEstimate 
-        ? `${aiResult.name} (${aiResult.portionEstimate})`
-        : aiResult.name;
+    if (ingredients.length > 0) {
+      const totals = calculateTotal();
+      
+      // Create a description string of what was eaten
+      const description = ingredients.map(i => i.name).join(', ');
+      const finalName = `${overallName} (${description})`;
 
       // 1. Add to Log
       onAdd(
-        displayName, 
-        {
-          calories: aiResult.calories,
-          protein: aiResult.protein,
-          carbs: aiResult.carbs,
-          fat: aiResult.fat
-        },
+        overallName, 
+        totals,
         selectedImage || undefined
       );
 
-      // 2. Save to Personal Database (Only macros/name, not the image to save space)
-      // Save clean name without the long estimate description for the database autocomplete
+      // 2. Save to Database (We save the main dish name with total macros)
       StorageService.saveFoodToDatabase(userId, {
-        name: aiResult.name, 
-        calories: aiResult.calories,
-        protein: aiResult.protein,
-        carbs: aiResult.carbs,
-        fat: aiResult.fat
+        name: overallName, 
+        calories: totals.calories,
+        protein: totals.protein,
+        carbs: totals.carbs,
+        fat: totals.fat
       });
     }
   };
@@ -165,10 +221,7 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
       fat: parseFloat(manualFat) || 0,
     };
 
-    // 1. Add to Log (include image if manually selected)
     onAdd(manualName, foodData, selectedImage || undefined);
-
-    // 2. Save to Personal Database
     StorageService.saveFoodToDatabase(userId, foodData);
   };
 
@@ -179,7 +232,6 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
       carbs: food.carbs,
       fat: food.fat
     });
-    // Update usage count by re-saving
     StorageService.saveFoodToDatabase(userId, {
         name: food.name,
         calories: food.calories,
@@ -188,6 +240,8 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
         fat: food.fat
     });
   };
+
+  const totals = calculateTotal();
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 backdrop-blur-sm transition-opacity">
@@ -225,7 +279,6 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
                  <input 
                    type="file" 
                    accept="image/*" 
-                   // Removed capture to allow gallery selection
                    ref={fileInputRef}
                    className="hidden"
                    onChange={handleImageUpload}
@@ -256,7 +309,7 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
                       value={input}
                       onChange={(e) => {
                         setInput(e.target.value);
-                        setAiResult(null);
+                        setIngredients([]);
                       }}
                       placeholder={selectedImage ? "Describe food (Optional)..." : "e.g. 雞胸肉"}
                       className="w-full border border-gray-300 rounded-lg pl-4 pr-12 py-3 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-sm text-lg"
@@ -278,7 +331,7 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
               </div>
 
               {/* Suggestions */}
-              {input && filteredFoods.length > 0 && !aiResult && !selectedImage && (
+              {input && filteredFoods.length > 0 && ingredients.length === 0 && !selectedImage && (
                 <div className="space-y-2 animate-fade-in">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Suggestions</p>
                   {filteredFoods.map(food => (
@@ -291,78 +344,84 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
                       <span className="text-sm text-gray-500">{food.calories} kcal</span>
                     </button>
                   ))}
-                  <div className="relative flex py-2 items-center">
-                    <div className="flex-grow border-t border-gray-200"></div>
-                    <span className="flex-shrink mx-4 text-gray-400 text-xs">OR ANALYZE WITH AI</span>
-                    <div className="flex-grow border-t border-gray-200"></div>
-                  </div>
                 </div>
-              )}
-
-              {!input && !loading && !aiResult && !selectedImage && (
-                 <div className="text-center py-8">
-                    {savedFoods.length > 0 ? (
-                      <div className="space-y-2">
-                         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Recent Foods</p>
-                         <div className="flex flex-wrap gap-2 justify-center">
-                           {savedFoods.slice(0, 5).map(food => (
-                             <button 
-                               key={food.id}
-                               onClick={() => handleSelectSavedFood(food)}
-                               className="px-3 py-1 bg-gray-100 hover:bg-emerald-100 text-gray-700 hover:text-emerald-700 rounded-full text-sm transition"
-                             >
-                               {food.name}
-                             </button>
-                           ))}
-                         </div>
-                      </div>
-                    ) : (
-                      <div className="text-gray-400 text-sm">
-                        <p>Type any food or upload a photo for AI estimation.</p>
-                      </div>
-                    )}
-                 </div>
               )}
 
               {error && <p className="text-red-500 text-sm text-center bg-red-50 p-2 rounded">{error}</p>}
 
-              {/* AI Result Card */}
-              {aiResult && (
-                <div className="bg-emerald-50 p-5 rounded-xl border border-emerald-100 animate-fade-in shadow-sm">
-                  <div className="mb-4">
-                    <span className="text-xs font-bold text-emerald-600 uppercase tracking-wide">AI Estimate</span>
-                    <h3 className="font-bold text-xl text-gray-800">{aiResult.name}</h3>
-                    {aiResult.portionEstimate && (
-                      <p className="text-sm text-emerald-800 mt-1 bg-emerald-100/50 p-2 rounded">
-                        ℹ️ {aiResult.portionEstimate}
-                      </p>
-                    )}
+              {/* AI Result / Editable Ingredient List */}
+              {ingredients.length > 0 && (
+                <div className="bg-emerald-50 rounded-xl border border-emerald-100 animate-fade-in shadow-sm overflow-hidden">
+                  <div className="p-4 bg-emerald-100 border-b border-emerald-200 flex justify-between items-center">
+                     <div>
+                        <span className="text-xs font-bold text-emerald-600 uppercase tracking-wide">Breakdown</span>
+                        <input 
+                           value={overallName} 
+                           onChange={e => setOverallName(e.target.value)}
+                           className="block w-full bg-transparent font-bold text-xl text-gray-800 focus:outline-none border-b border-transparent focus:border-emerald-500"
+                        />
+                     </div>
+                     <div className="text-right">
+                       <p className="text-xs text-emerald-700 font-semibold">TOTAL</p>
+                       <p className="font-bold text-lg text-emerald-800">{Math.round(totals.calories)} <span className="text-xs">kcal</span></p>
+                     </div>
                   </div>
-                  
-                  <div className="grid grid-cols-4 gap-2 text-center text-sm mb-4">
-                    <div className="bg-white p-3 rounded-lg shadow-sm">
-                      <div className="text-gray-500 text-xs mb-1">Calories</div>
-                      <div className="font-bold text-lg text-gray-800">{aiResult.calories}</div>
-                    </div>
-                    <div className="bg-white p-3 rounded-lg shadow-sm">
-                      <div className="text-emerald-500 text-xs mb-1">Protein</div>
-                      <div className="font-bold text-gray-800">{aiResult.protein}g</div>
-                    </div>
-                    <div className="bg-white p-3 rounded-lg shadow-sm">
-                      <div className="text-blue-500 text-xs mb-1">Carbs</div>
-                      <div className="font-bold text-gray-800">{aiResult.carbs}g</div>
-                    </div>
-                    <div className="bg-white p-3 rounded-lg shadow-sm">
-                      <div className="text-red-500 text-xs mb-1">Fat</div>
-                      <div className="font-bold text-gray-800">{aiResult.fat}g</div>
-                    </div>
+
+                  <div className="divide-y divide-emerald-100">
+                     {ingredients.map((item, index) => (
+                       <div key={item.id} className="p-3 bg-white hover:bg-gray-50 transition">
+                         <div className="flex gap-2 mb-2">
+                            <input 
+                              value={item.name}
+                              onChange={(e) => {
+                                const newVal = e.target.value;
+                                setIngredients(prev => prev.map(p => p.id === item.id ? {...p, name: newVal} : p));
+                              }}
+                              className="flex-grow border border-gray-200 rounded px-2 py-1 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                            />
+                            <button 
+                              onClick={() => handleRecalculateRow(item.id, item.name)}
+                              disabled={item.isLoading}
+                              className="bg-blue-50 text-blue-600 hover:bg-blue-100 p-1.5 rounded"
+                              title="Recalculate Macros from Name"
+                            >
+                              {item.isLoading ? <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div> : '🔄'}
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteRow(item.id)}
+                              className="bg-red-50 text-red-500 hover:bg-red-100 p-1.5 rounded"
+                              title="Delete Item"
+                            >
+                              ×
+                            </button>
+                         </div>
+                         <div className="flex justify-between text-xs text-gray-500 px-1">
+                            <span>Cal: {Math.round(item.calories)}</span>
+                            <span>P: {Math.round(item.protein)}</span>
+                            <span>C: {Math.round(item.carbs)}</span>
+                            <span>F: {Math.round(item.fat)}</span>
+                         </div>
+                       </div>
+                     ))}
                   </div>
-                  <button 
-                    onClick={handleConfirmAi}
-                    className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 font-bold shadow-md hover:shadow-lg transition-all transform active:scale-95"
-                  >
-                    Add to Log
-                  </button>
+
+                  <div className="p-3 bg-emerald-50 border-t border-emerald-100 flex gap-2">
+                     <button 
+                       onClick={handleAddRow}
+                       className="flex-1 py-2 bg-white border border-emerald-200 text-emerald-700 text-sm rounded-lg hover:bg-emerald-100 transition"
+                     >
+                       + Add Item
+                     </button>
+                  </div>
+
+                  <div className="p-3">
+                    <button 
+                      onClick={handleConfirmAi}
+                      className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 font-bold shadow-md hover:shadow-lg transition-all transform active:scale-95"
+                    >
+                      Confirm & Add Log
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
