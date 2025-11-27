@@ -215,7 +215,7 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
                  <input 
                    type="file" 
                    accept="image/*" 
-                   capture="environment"
+                   // Removed capture="environment" to allow gallery selection
                    ref={fileInputRef}
                    className="hidden"
                    onChange={handleImageUpload}
