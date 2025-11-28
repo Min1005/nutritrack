@@ -7,6 +7,7 @@ import ProfileForm from './components/ProfileForm';
 import Dashboard from './components/Dashboard'; // This is now Day Detail View
 import CalendarView from './components/CalendarView';
 import FoodLogger from './components/FoodLogger';
+import StatisticsView from './components/StatisticsView';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
@@ -19,7 +20,7 @@ const App: React.FC = () => {
   const [dailyStats, setDailyStats] = useState<DailyStats[]>([]);
   
   // View States
-  const [viewMode, setViewMode] = useState<'calendar' | 'day'>('calendar');
+  const [viewMode, setViewMode] = useState<'calendar' | 'day' | 'stats'>('calendar');
   const [selectedDate, setSelectedDate] = useState<string>(getTodayDateString());
   
   // Modal States
@@ -274,7 +275,60 @@ const App: React.FC = () => {
     );
   }
 
-  // 3. Main Application (Calendar or Day View)
+  // 3. Main Application (Calendar / Day / Stats)
+  const renderMainContent = () => {
+    switch (viewMode) {
+      case 'stats':
+        return (
+          <StatisticsView 
+            user={currentUser}
+            logs={logs}
+            dailyStats={dailyStats}
+            onBack={() => setViewMode('calendar')}
+          />
+        );
+      case 'day':
+        return (
+          <Dashboard 
+            user={currentUser}
+            date={selectedDate}
+            logs={logs}
+            workouts={workouts}
+            bodyChecks={bodyChecks}
+            dailyStats={dailyStats.find(s => s.date === selectedDate)}
+            onUpdateDailyStats={handleUpdateDailyStats}
+            onBack={() => setViewMode('calendar')}
+            onDeleteLog={handleDeleteLog}
+            onAddFood={() => {
+              setEditingLog(null);
+              setIsAddingFood(true);
+            }}
+            onEditLog={handleEditLog}
+            onAddWorkout={handleAddWorkout}
+            onDeleteWorkout={handleDeleteWorkout}
+            onAddBodyCheck={handleAddBodyCheck}
+            onDeleteBodyCheck={handleDeleteBodyCheck}
+          />
+        );
+      case 'calendar':
+      default:
+        return (
+          <CalendarView 
+            user={currentUser}
+            logs={logs}
+            workouts={workouts}
+            bodyChecks={bodyChecks}
+            dailyStats={dailyStats}
+            onSelectDate={handleDateSelect}
+            onEditProfile={() => setIsEditingProfile(true)}
+            onLogout={logoutUser}
+            onExport={handleExportData}
+            onViewStats={() => setViewMode('stats')}
+          />
+        );
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <nav className="bg-white shadow-sm sticky top-0 z-30">
@@ -296,42 +350,7 @@ const App: React.FC = () => {
       </nav>
 
       <main className="p-4">
-        {currentUser && (
-          viewMode === 'calendar' ? (
-            <CalendarView 
-              user={currentUser}
-              logs={logs}
-              workouts={workouts}
-              bodyChecks={bodyChecks}
-              dailyStats={dailyStats}
-              onSelectDate={handleDateSelect}
-              onEditProfile={() => setIsEditingProfile(true)}
-              onLogout={logoutUser}
-              onExport={handleExportData}
-            />
-          ) : (
-            <Dashboard 
-              user={currentUser}
-              date={selectedDate}
-              logs={logs}
-              workouts={workouts}
-              bodyChecks={bodyChecks}
-              dailyStats={dailyStats.find(s => s.date === selectedDate)}
-              onUpdateDailyStats={handleUpdateDailyStats}
-              onBack={() => setViewMode('calendar')}
-              onDeleteLog={handleDeleteLog}
-              onAddFood={() => {
-                setEditingLog(null);
-                setIsAddingFood(true);
-              }}
-              onEditLog={handleEditLog}
-              onAddWorkout={handleAddWorkout}
-              onDeleteWorkout={handleDeleteWorkout}
-              onAddBodyCheck={handleAddBodyCheck}
-              onDeleteBodyCheck={handleDeleteBodyCheck}
-            />
-          )
-        )}
+        {currentUser && renderMainContent()}
       </main>
 
       {/* Food Logger Modal */}

@@ -13,10 +13,11 @@ interface CalendarViewProps {
   onEditProfile: () => void;
   onLogout: () => void;
   onExport: () => void;
+  onViewStats: () => void;
 }
 
 const CalendarView: React.FC<CalendarViewProps> = ({ 
-  user, logs, workouts, bodyChecks, dailyStats, onSelectDate, onEditProfile, onLogout, onExport 
+  user, logs, workouts, bodyChecks, dailyStats, onSelectDate, onEditProfile, onLogout, onExport, onViewStats 
 }) => {
   const today = new Date();
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -87,11 +88,14 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         </div>
 
         <div className="flex gap-2 flex-wrap justify-center md:justify-end">
+           <button onClick={onViewStats} className="text-sm border border-indigo-200 text-indigo-700 px-4 py-2 rounded-lg hover:bg-indigo-50 transition flex items-center gap-1">
+             Trends 📈
+           </button>
            <button onClick={onEditProfile} className="text-sm border border-emerald-200 text-emerald-700 px-4 py-2 rounded-lg hover:bg-emerald-50 transition">
              Edit Profile
            </button>
            <button onClick={onExport} className="text-sm border border-blue-200 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-50 transition">
-             Backup Data
+             Backup
            </button>
            <button onClick={onLogout} className="text-sm border border-gray-200 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-50 transition">
              Logout
