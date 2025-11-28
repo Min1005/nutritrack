@@ -94,12 +94,12 @@ const Dashboard: React.FC<DayDetailProps> = ({
                 <div className="bg-white p-6 rounded-xl shadow-md col-span-1 md:col-span-2 flex flex-col justify-center">
                     <div className="flex justify-between items-end mb-2">
                         <div>
-                            <span className="text-3xl font-bold text-gray-800">{totalMacros.calories}</span>
+                            <span className="text-3xl font-bold text-gray-800">{Math.round(totalMacros.calories)}</span>
                             <span className="text-gray-500 ml-1">/ {calorieGoal} kcal</span>
                         </div>
                         <div className="text-right">
                             <span className="block text-sm text-gray-500">Remaining</span>
-                            <span className="font-bold text-emerald-600">{remainingCalories}</span>
+                            <span className="font-bold text-emerald-600">{Math.round(remainingCalories)}</span>
                         </div>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
@@ -111,15 +111,15 @@ const Dashboard: React.FC<DayDetailProps> = ({
                     <div className="mt-6 grid grid-cols-3 gap-4 text-center">
                         <div className="bg-blue-50 p-2 rounded-lg">
                             <p className="text-xs text-blue-500 font-semibold uppercase">Carbs</p>
-                            <p className="font-bold text-gray-700">{Math.round(totalMacros.carbs)}g</p>
+                            <p className="font-bold text-gray-700">{totalMacros.carbs.toFixed(2)}g</p>
                         </div>
                         <div className="bg-emerald-50 p-2 rounded-lg">
                             <p className="text-xs text-emerald-500 font-semibold uppercase">Protein</p>
-                            <p className="font-bold text-gray-700">{Math.round(totalMacros.protein)}g</p>
+                            <p className="font-bold text-gray-700">{totalMacros.protein.toFixed(2)}g</p>
                         </div>
                         <div className="bg-red-50 p-2 rounded-lg">
                             <p className="text-xs text-red-500 font-semibold uppercase">Fat</p>
-                            <p className="font-bold text-gray-700">{Math.round(totalMacros.fat)}g</p>
+                            <p className="font-bold text-gray-700">{totalMacros.fat.toFixed(2)}g</p>
                         </div>
                     </div>
                 </div>
@@ -172,7 +172,7 @@ const Dashboard: React.FC<DayDetailProps> = ({
                                             {log.name} 
                                             <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">EDIT</span>
                                           </p>
-                                          <p className="text-xs text-gray-500">{log.calories} kcal • P: {log.protein}g</p>
+                                          <p className="text-xs text-gray-500">{Math.round(log.calories)} kcal • P: {log.protein.toFixed(2)}g</p>
                                       </div>
                                   </div>
                                   <button 

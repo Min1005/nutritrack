@@ -298,7 +298,7 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
         {!initialLog && (
           <div className="flex border-b shrink-0">
             <button 
-              className={`flex-1 py-3 text-sm font-medium transition-colors ${mode === 'ai' ? 'text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+              className={`flex-1 py-3 text-sm font-medium transition-colors ${mode === 'ai' ? 'text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50' : 'text-gray-500 hover:text-gray-700 hover:text-gray-700 hover:bg-gray-50'}`}
               onClick={() => setMode('ai')}
             >
               ✨ Search / AI
@@ -448,9 +448,9 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
                          </div>
                          <div className="flex justify-between text-xs text-gray-500 px-1">
                             <span>Cal: {Math.round(item.calories)}</span>
-                            <span>P: {Math.round(item.protein)}</span>
-                            <span>C: {Math.round(item.carbs)}</span>
-                            <span>F: {Math.round(item.fat)}</span>
+                            <span>P: {item.protein.toFixed(2)}g</span>
+                            <span>C: {item.carbs.toFixed(2)}g</span>
+                            <span>F: {item.fat.toFixed(2)}g</span>
                          </div>
                        </div>
                      ))}
