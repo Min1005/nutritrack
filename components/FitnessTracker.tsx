@@ -1,9 +1,9 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { WorkoutLogItem, BodyCheckItem } from '../types';
 import { generateId } from '../utils/calculations';
 import { compressImage } from '../utils/imageUtils';
 import { commonExercises } from '../utils/exerciseData';
+import WorkoutAdvisor from './WorkoutAdvisor';
 
 interface FitnessTrackerProps {
   date: string;
@@ -28,6 +28,9 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
   // Autocomplete State
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredExercises, setFilteredExercises] = useState<string[]>([]);
+  
+  // AI Coach State
+  const [showAdvisor, setShowAdvisor] = useState(false);
   
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -68,8 +71,8 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
 
   const isFormValid = exercise.trim() !== '' && sets !== '' && reps !== '' && weight !== '';
 
-  const handleAddWorkout = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddWorkout = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!isFormValid) return;
 
     const newWorkout: WorkoutLogItem = {
@@ -84,11 +87,21 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
     };
     onAddWorkout(newWorkout);
     
+    // Reset but keep tags?
     setExercise('');
     setSets('');
     setReps('');
     setWeight('');
     setShowSuggestions(false);
+  };
+
+  const handleAdvisorAdd = (name: string, s: number, r: number) => {
+    setExercise(name);
+    setSets(s.toString());
+    setReps(r.toString());
+    setWeight(''); // User must input weight based on their strength
+    setShowAdvisor(false);
+    // Focus weight input?
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,9 +131,17 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
       
       {/* Workout Section */}
       <div className="bg-white rounded-xl shadow-md p-4">
-        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span>💪</span> Workouts
-        </h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+            <span>💪</span> Workouts
+          </h3>
+          <button 
+            onClick={() => setShowAdvisor(true)}
+            className="text-sm bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1.5 rounded-lg hover:shadow-lg transition flex items-center gap-1 font-bold"
+          >
+            <span>✨</span> AI Coach
+          </button>
+        </div>
 
         {/* Add Workout Form */}
         <form onSubmit={handleAddWorkout} className="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100 relative">
@@ -304,6 +325,14 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
         </div>
         <p className="text-xs text-gray-400 mt-2 text-center">Photos are stored locally on this device.</p>
       </div>
+
+      {/* Advisor Modal */}
+      {showAdvisor && (
+        <WorkoutAdvisor 
+          onClose={() => setShowAdvisor(false)} 
+          onAddExercise={handleAdvisorAdd}
+        />
+      )}
 
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { analyzeFoodWithGemini, analyzeSingleIngredient, hasApiKey } from '../services/geminiService';
 import { MacroNutrients, SavedFoodItem, FoodLogItem, IngredientItem } from '../types';
@@ -58,10 +57,14 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
           isLoading: false
         })));
       } else {
-        // Fallback for logs without ingredients
+        // IMPORTANT FIX: 
+        // If editing a log that doesn't have detailed ingredients (e.g. legacy data or manual entry),
+        // convert the total macros into a single "ingredient" line.
+        // This allows the user to still use the detailed editor (split, delete, modify) 
+        // instead of being stuck with a read-only total.
         setIngredients([{
-          id: 'default',
-          name: initialLog.name,
+          id: Math.random().toString(36).substr(2, 9),
+          name: initialLog.name, // The line item name defaults to the dish name
           calories: initialLog.calories,
           protein: initialLog.protein,
           carbs: initialLog.carbs,

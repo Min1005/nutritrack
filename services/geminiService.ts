@@ -16,11 +16,25 @@ export interface FoodAnalysisResult {
   ingredients: IngredientItem[];
 }
 
+export interface WorkoutPlanResult {
+  planName: string;
+  advice: string;
+  exercises: {
+    name: string;
+    sets: number;
+    reps: string; // string to allow "10-12" or "Failure"
+    weightSuggestion: string;
+    tips: string;
+    youtubeQuery: string; // For generating video links
+  }[];
+}
+
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
 export const analyzeFoodWithGemini = async (
   input: string | { imageBase64: string, text?: string }
 ): Promise<FoodAnalysisResult | null> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
+  
   let contents: any;
   // Enhanced Prompt for Ingredient Breakdown
   const promptSuffix = `
@@ -94,8 +108,6 @@ export const analyzeFoodWithGemini = async (
 };
 
 export const analyzeSingleIngredient = async (description: string): Promise<MacroNutrients | null> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
@@ -120,6 +132,63 @@ export const analyzeSingleIngredient = async (description: string): Promise<Macr
     return JSON.parse(text);
   } catch (error) {
     console.error("Error analyzing single ingredient:", error);
+    return null;
+  }
+};
+
+export const generateWorkoutPlan = async (
+  target: string,
+  userContext: string
+): Promise<WorkoutPlanResult | null> => {
+  try {
+    const prompt = `
+      Act as an expert fitness coach. Create a workout plan focusing on: "${target}".
+      Context/User Request: "${userContext}".
+      
+      Response Requirements:
+      1. Language: Traditional Chinese (繁體中文).
+      2. Provide a specific list of exercises.
+      3. For each exercise, provide specific Set/Rep recommendations.
+      4. Provide a search query string for finding a tutorial video on YouTube (e.g. "Dumbbell Bench Press tutorial").
+    `;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            planName: { type: Type.STRING },
+            advice: { type: Type.STRING, description: "General advice or focus points" },
+            exercises: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  name: { type: Type.STRING },
+                  sets: { type: Type.NUMBER },
+                  reps: { type: Type.STRING },
+                  weightSuggestion: { type: Type.STRING },
+                  tips: { type: Type.STRING },
+                  youtubeQuery: { type: Type.STRING },
+                },
+                required: ["name", "sets", "reps", "youtubeQuery"],
+              },
+            },
+          },
+          required: ["planName", "exercises"],
+        },
+      },
+    });
+
+    const text = response.text;
+    if (!text) return null;
+    return JSON.parse(text);
+
+  } catch (error) {
+    console.error("Error generating workout plan:", error);
     return null;
   }
 };
