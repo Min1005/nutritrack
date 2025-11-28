@@ -4,12 +4,13 @@ import { StorageService } from './services/storageService';
 import { UserProfile, FoodLogItem, MacroNutrients, WorkoutLogItem, BodyCheckItem, IngredientItem, DailyStats } from './types';
 import { generateId, getTodayDateString, calculateBMR, calculateTDEE, calculateTargetCalories } from './utils/calculations';
 import ProfileForm from './components/ProfileForm';
-import Dashboard from './components/Dashboard'; // This is now Day Detail View
+import Dashboard from './components/Dashboard'; 
 import CalendarView from './components/CalendarView';
 import FoodLogger from './components/FoodLogger';
 import StatisticsView from './components/StatisticsView';
 
 const App: React.FC = () => {
+  const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [users, setUsers] = useState<UserProfile[]>([]);
   
@@ -34,26 +35,40 @@ const App: React.FC = () => {
     loadAllData();
   }, []);
 
-  const loadAllData = () => {
-    const loadedUsers = StorageService.getUsers();
-    setUsers(loadedUsers);
-    
-    const currentId = StorageService.getCurrentUserId();
-    if (currentId) {
-      const user = loadedUsers.find(u => u.id === currentId);
-      if (user) loginUser(user);
+  const loadAllData = async () => {
+    setLoading(true);
+    try {
+      const loadedUsers = await StorageService.getUsers();
+      setUsers(loadedUsers);
+      
+      const currentId = StorageService.getCurrentUserId();
+      if (currentId) {
+        const user = loadedUsers.find(u => u.id === currentId);
+        if (user) await loginUser(user);
+      }
+    } catch (e) {
+      console.error("Failed to load data", e);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const loginUser = (user: UserProfile) => {
+  const loginUser = async (user: UserProfile) => {
     setCurrentUser(user);
     StorageService.setCurrentUserId(user.id);
     
-    // Load User Data
-    setLogs(StorageService.getLogs(user.id));
-    setWorkouts(StorageService.getWorkouts(user.id));
-    setBodyChecks(StorageService.getBodyChecks(user.id));
-    setDailyStats(StorageService.getDailyStats(user.id));
+    // Load User Data Async
+    const [l, w, b, d] = await Promise.all([
+      StorageService.getLogs(user.id),
+      StorageService.getWorkouts(user.id),
+      StorageService.getBodyChecks(user.id),
+      StorageService.getDailyStats(user.id)
+    ]);
+
+    setLogs(l);
+    setWorkouts(w);
+    setBodyChecks(b);
+    setDailyStats(d);
     
     setIsEditingProfile(false);
     setIsCreatingNewUser(false);
@@ -71,18 +86,20 @@ const App: React.FC = () => {
 
   // --- Actions ---
 
-  const handleSaveProfile = (profile: UserProfile) => {
-    StorageService.saveUser(profile);
-    const updatedUsers = StorageService.getUsers();
+  const handleSaveProfile = async (profile: UserProfile) => {
+    setLoading(true);
+    await StorageService.saveUser(profile);
+    const updatedUsers = await StorageService.getUsers();
     setUsers(updatedUsers);
-    loginUser(profile);
+    await loginUser(profile);
+    setLoading(false);
   };
 
-  const handleUpdateDailyStats = (stats: DailyStats) => {
+  const handleUpdateDailyStats = async (stats: DailyStats) => {
     if (!currentUser) return;
 
     // 1. Save Stats
-    StorageService.saveDailyStats(currentUser.id, stats);
+    await StorageService.saveDailyStats(currentUser.id, stats);
     
     // 2. Update Local State
     setDailyStats(prev => {
@@ -113,14 +130,14 @@ const App: React.FC = () => {
       };
 
       // Save updated user profile
-      StorageService.saveUser(updatedUser);
+      await StorageService.saveUser(updatedUser);
       setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
       setCurrentUser(updatedUser);
     }
   };
 
-  const handleExportData = () => {
-    const data = StorageService.createBackup();
+  const handleExportData = async () => {
+    const data = await StorageService.createBackup();
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -138,7 +155,7 @@ const App: React.FC = () => {
 
   // --- Food Logic ---
 
-  const handleAddLog = (name: string, macros: MacroNutrients, image?: string, ingredients?: IngredientItem[]) => {
+  const handleAddLog = async (name: string, macros: MacroNutrients, image?: string, ingredients?: IngredientItem[]) => {
     if (!currentUser) return;
     const newLog: FoodLogItem = {
       id: generateId(),
@@ -149,7 +166,7 @@ const App: React.FC = () => {
       timestamp: Date.now(),
       date: selectedDate // Use selected date, not just today
     };
-    StorageService.addLog(currentUser.id, newLog);
+    await StorageService.addLog(currentUser.id, newLog);
     setLogs(prev => [...prev, newLog]);
     setIsAddingFood(false);
   };
@@ -159,49 +176,60 @@ const App: React.FC = () => {
     setIsAddingFood(true);
   };
 
-  const handleUpdateLog = (updatedLog: FoodLogItem) => {
+  const handleUpdateLog = async (updatedLog: FoodLogItem) => {
     if (!currentUser) return;
-    StorageService.updateLog(currentUser.id, updatedLog);
+    await StorageService.updateLog(currentUser.id, updatedLog);
     setLogs(prev => prev.map(l => l.id === updatedLog.id ? updatedLog : l));
     setIsAddingFood(false);
     setEditingLog(null);
   };
 
-  const handleDeleteLog = (logId: string) => {
+  const handleDeleteLog = async (logId: string) => {
     if (!currentUser) return;
-    StorageService.deleteLog(currentUser.id, logId);
+    await StorageService.deleteLog(currentUser.id, logId);
     setLogs(prev => prev.filter(l => l.id !== logId));
   };
 
   // --- Workout Logic ---
 
-  const handleAddWorkout = (item: WorkoutLogItem) => {
+  const handleAddWorkout = async (item: WorkoutLogItem) => {
     if (!currentUser) return;
-    StorageService.addWorkout(currentUser.id, item);
+    await StorageService.addWorkout(currentUser.id, item);
     setWorkouts(prev => [...prev, item]);
   };
 
-  const handleDeleteWorkout = (id: string) => {
+  const handleDeleteWorkout = async (id: string) => {
     if (!currentUser) return;
-    StorageService.deleteWorkout(currentUser.id, id);
+    await StorageService.deleteWorkout(currentUser.id, id);
     setWorkouts(prev => prev.filter(w => w.id !== id));
   };
 
   // --- Body Check Logic ---
 
-  const handleAddBodyCheck = (item: BodyCheckItem) => {
+  const handleAddBodyCheck = async (item: BodyCheckItem) => {
     if (!currentUser) return;
-    StorageService.addBodyCheck(currentUser.id, item);
+    await StorageService.addBodyCheck(currentUser.id, item);
     setBodyChecks(prev => [...prev, item]);
   };
 
-  const handleDeleteBodyCheck = (id: string) => {
+  const handleDeleteBodyCheck = async (id: string) => {
     if (!currentUser) return;
-    StorageService.deleteBodyCheck(currentUser.id, id);
+    await StorageService.deleteBodyCheck(currentUser.id, id);
     setBodyChecks(prev => prev.filter(b => b.id !== id));
   };
 
   // --- Renders ---
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="flex flex-col items-center">
+           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4"></div>
+           <p className="text-gray-500 font-medium">Initializing Database...</p>
+        </div>
+      </div>
+    );
+  }
 
   // 1. Auth / Login Screen
   if (!currentUser && !isCreatingNewUser) {
@@ -251,7 +279,7 @@ const App: React.FC = () => {
           </button>
           
           <div className="mt-8 text-center text-xs text-gray-400">
-             <p>Data stored locally in browser.</p>
+             <p>Data stored locally (IndexedDB).</p>
              <p>Backup regularly using the export feature.</p>
           </div>
         </div>

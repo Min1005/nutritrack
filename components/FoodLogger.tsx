@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { analyzeFoodWithGemini, analyzeSingleIngredient, hasApiKey } from '../services/geminiService';
 import { MacroNutrients, SavedFoodItem, FoodLogItem, IngredientItem } from '../types';
@@ -32,7 +33,7 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
   const [savedFoods, setSavedFoods] = useState<SavedFoodItem[]>([]);
   const [filteredFoods, setFilteredFoods] = useState<SavedFoodItem[]>([]);
   
-  // AI Result State - Now managing a list of ingredients
+  // AI Result State
   const [overallName, setOverallName] = useState('');
   const [ingredients, setIngredients] = useState<EditableIngredient[]>([]);
 
@@ -43,40 +44,39 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
   const [manualCarbs, setManualCarbs] = useState('');
   const [manualFat, setManualFat] = useState('');
 
-  // Initialize for Editing
+  // Initialize for Editing or Loading Saved Foods
   useEffect(() => {
-    if (initialLog) {
-      setMode('ai'); // Use AI view structure for editing
-      setOverallName(initialLog.name);
-      setSelectedImage(initialLog.image || null);
-      
-      if (initialLog.ingredients && initialLog.ingredients.length > 0) {
-        setIngredients(initialLog.ingredients.map(ing => ({
-          ...ing,
-          id: Math.random().toString(36).substr(2, 9),
-          isLoading: false
-        })));
+    const initialize = async () => {
+      if (initialLog) {
+        setMode('ai'); 
+        setOverallName(initialLog.name);
+        setSelectedImage(initialLog.image || null);
+        
+        if (initialLog.ingredients && initialLog.ingredients.length > 0) {
+          setIngredients(initialLog.ingredients.map(ing => ({
+            ...ing,
+            id: Math.random().toString(36).substr(2, 9),
+            isLoading: false
+          })));
+        } else {
+          setIngredients([{
+            id: Math.random().toString(36).substr(2, 9),
+            name: initialLog.name,
+            calories: initialLog.calories,
+            protein: initialLog.protein,
+            carbs: initialLog.carbs,
+            fat: initialLog.fat,
+            isLoading: false
+          }]);
+        }
       } else {
-        // IMPORTANT FIX: 
-        // If editing a log that doesn't have detailed ingredients (e.g. legacy data or manual entry),
-        // convert the total macros into a single "ingredient" line.
-        // This allows the user to still use the detailed editor (split, delete, modify) 
-        // instead of being stuck with a read-only total.
-        setIngredients([{
-          id: Math.random().toString(36).substr(2, 9),
-          name: initialLog.name, // The line item name defaults to the dish name
-          calories: initialLog.calories,
-          protein: initialLog.protein,
-          carbs: initialLog.carbs,
-          fat: initialLog.fat,
-          isLoading: false
-        }]);
+        // Load saved foods async
+        const foods = await StorageService.getSavedFoods(userId);
+        setSavedFoods(foods);
       }
-    } else {
-      // Load saved foods only if not editing
-      const foods = StorageService.getSavedFoods(userId);
-      setSavedFoods(foods);
-    }
+    };
+    
+    initialize();
   }, [userId, initialLog]);
 
   // Filter foods when input changes
@@ -94,7 +94,8 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
             id: `static-${name}`,
             name,
             ...macros,
-            timesUsed: 0
+            timesUsed: 0,
+            userId: 'static' // Dummy ID
         } as SavedFoodItem));
 
       setFilteredFoods([...userMatches, ...staticMatches]);
@@ -110,7 +111,7 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
       try {
         const compressedBase64 = await compressImage(file, 600);
         setSelectedImage(compressedBase64);
-        setIngredients([]); // Reset previous results
+        setIngredients([]);
         setOverallName('');
       } catch (err) {
         console.error("Error compressing image", err);
@@ -219,12 +220,9 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
   const handleConfirm = () => {
     if (ingredients.length > 0) {
       const totals = calculateTotal();
-      
-      // Clean ingredients for storage (remove ID and loading state)
       const cleanIngredients: IngredientItem[] = ingredients.map(({ id, isLoading, ...rest }) => rest);
 
       if (initialLog && onUpdate) {
-        // UPDATE MODE
         onUpdate({
           ...initialLog,
           name: overallName,
@@ -233,7 +231,6 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
           image: selectedImage || undefined
         });
       } else {
-        // ADD MODE
         onAdd(
           overallName, 
           totals,
@@ -241,7 +238,6 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
           cleanIngredients
         );
 
-        // Save to Database only on new adds
         StorageService.saveFoodToDatabase(userId, {
           name: overallName, 
           calories: totals.calories,
@@ -268,7 +264,6 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
   };
 
   const handleSelectSavedFood = (food: SavedFoodItem) => {
-    // When selecting saved food, treat it as "AI Result" with 1 ingredient for consistency
     setOverallName(food.name);
     setIngredients([{
         id: 'saved-1',
@@ -316,7 +311,7 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
           {mode === 'ai' ? (
             <div className="space-y-4">
               
-              {/* Image & Search Area (Hidden if ingredients already loaded/editing) */}
+              {/* Image & Search Area */}
               {ingredients.length === 0 && !initialLog && (
                 <div className="flex items-center gap-3">
                    <input 
@@ -393,7 +388,7 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
 
               {error && <p className="text-red-500 text-sm text-center bg-red-50 p-2 rounded">{error}</p>}
 
-              {/* Ingredient Editor (Always shown if ingredients exist) */}
+              {/* Ingredient Editor */}
               {ingredients.length > 0 && (
                 <div className="bg-emerald-50 rounded-xl border border-emerald-100 animate-fade-in shadow-sm overflow-hidden">
                   <div className="p-4 bg-emerald-100 border-b border-emerald-200 flex justify-between items-center">
@@ -411,7 +406,6 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
                      </div>
                   </div>
                   
-                  {/* If editing and has image, show it small */}
                   {initialLog && selectedImage && (
                     <div className="bg-emerald-50 px-4 pt-2">
                        <img src={selectedImage} alt="Food" className="w-16 h-16 rounded object-cover border border-emerald-200" />

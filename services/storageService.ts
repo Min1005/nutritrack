@@ -1,47 +1,24 @@
 
 import { UserProfile, FoodLogItem, SavedFoodItem, WorkoutLogItem, BodyCheckItem, DataBackup, DailyStats } from '../types';
+import { DB, STORES } from './db';
 
-const USERS_KEY = 'nutritrack_users';
-const LOGS_KEY = 'nutritrack_logs';
-const SAVED_FOODS_KEY = 'nutritrack_saved_foods';
 const CURRENT_USER_ID_KEY = 'nutritrack_current_user_id';
-const WORKOUTS_KEY = 'nutritrack_workouts';
-const BODY_CHECKS_KEY = 'nutritrack_body_checks';
-const DAILY_STATS_KEY = 'nutritrack_daily_stats';
-
-// Helper for Record<string, T[]> parsing
-const getRecord = <T>(key: string): Record<string, T[]> => {
-  const data = localStorage.getItem(key);
-  return data ? JSON.parse(data) : {};
-};
-
-const saveRecord = <T>(key: string, data: Record<string, T[]>) => {
-  localStorage.setItem(key, JSON.stringify(data));
-};
 
 export const StorageService = {
-  getUsers: (): UserProfile[] => {
-    const data = localStorage.getItem(USERS_KEY);
-    return data ? JSON.parse(data) : [];
+  // Users
+  getUsers: async (): Promise<UserProfile[]> => {
+    return await DB.getAll<UserProfile>(STORES.USERS);
   },
 
-  saveUser: (user: UserProfile): void => {
-    const users = StorageService.getUsers();
-    const existingIndex = users.findIndex(u => u.id === user.id);
-    if (existingIndex >= 0) {
-      users[existingIndex] = user;
-    } else {
-      users.push(user);
-    }
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  saveUser: async (user: UserProfile): Promise<void> => {
+    await DB.put(STORES.USERS, user);
   },
 
-  deleteUser: (userId: string): void => {
-    const users = StorageService.getUsers();
-    const newUsers = users.filter(u => u.id !== userId);
-    localStorage.setItem(USERS_KEY, JSON.stringify(newUsers));
+  deleteUser: async (userId: string): Promise<void> => {
+    await DB.delete(STORES.USERS, userId);
   },
 
+  // Session (Still in LocalStorage for sync access if needed, but we mostly pass user obj)
   getCurrentUserId: (): string | null => {
     return localStorage.getItem(CURRENT_USER_ID_KEY);
   },
@@ -56,158 +33,163 @@ export const StorageService = {
 
   // --- Food Logs ---
 
-  getLogs: (userId: string): FoodLogItem[] => {
-    const parsedLogs = getRecord<FoodLogItem>(LOGS_KEY);
-    return parsedLogs[userId] || [];
+  getLogs: async (userId: string): Promise<FoodLogItem[]> => {
+    return await DB.getAll<FoodLogItem>(STORES.LOGS, 'userId', userId);
   },
 
-  addLog: (userId: string, log: FoodLogItem): void => {
-    const parsedLogs = getRecord<FoodLogItem>(LOGS_KEY);
-    if (!parsedLogs[userId]) parsedLogs[userId] = [];
-    parsedLogs[userId].push(log);
-    saveRecord(LOGS_KEY, parsedLogs);
+  addLog: async (userId: string, log: FoodLogItem): Promise<void> => {
+    const logWithUser = { ...log, userId };
+    await DB.put(STORES.LOGS, logWithUser);
   },
 
-  updateLog: (userId: string, updatedLog: FoodLogItem): void => {
-    const parsedLogs = getRecord<FoodLogItem>(LOGS_KEY);
-    if (parsedLogs[userId]) {
-      const index = parsedLogs[userId].findIndex(l => l.id === updatedLog.id);
-      if (index !== -1) {
-        parsedLogs[userId][index] = updatedLog;
-        saveRecord(LOGS_KEY, parsedLogs);
-      }
-    }
+  updateLog: async (userId: string, updatedLog: FoodLogItem): Promise<void> => {
+    const logWithUser = { ...updatedLog, userId };
+    await DB.put(STORES.LOGS, logWithUser);
   },
 
-  deleteLog: (userId: string, logId: string): void => {
-    const parsedLogs = getRecord<FoodLogItem>(LOGS_KEY);
-    if (parsedLogs[userId]) {
-      parsedLogs[userId] = parsedLogs[userId].filter(l => l.id !== logId);
-      saveRecord(LOGS_KEY, parsedLogs);
-    }
+  deleteLog: async (userId: string, logId: string): Promise<void> => {
+    await DB.delete(STORES.LOGS, logId);
   },
 
   // --- Workout Logs ---
 
-  getWorkouts: (userId: string): WorkoutLogItem[] => {
-    const parsed = getRecord<WorkoutLogItem>(WORKOUTS_KEY);
-    return parsed[userId] || [];
+  getWorkouts: async (userId: string): Promise<WorkoutLogItem[]> => {
+    return await DB.getAll<WorkoutLogItem>(STORES.WORKOUTS, 'userId', userId);
   },
 
-  addWorkout: (userId: string, item: WorkoutLogItem): void => {
-    const parsed = getRecord<WorkoutLogItem>(WORKOUTS_KEY);
-    if (!parsed[userId]) parsed[userId] = [];
-    parsed[userId].push(item);
-    saveRecord(WORKOUTS_KEY, parsed);
+  addWorkout: async (userId: string, item: WorkoutLogItem): Promise<void> => {
+    await DB.put(STORES.WORKOUTS, { ...item, userId });
   },
 
-  deleteWorkout: (userId: string, id: string): void => {
-    const parsed = getRecord<WorkoutLogItem>(WORKOUTS_KEY);
-    if (parsed[userId]) {
-      parsed[userId] = parsed[userId].filter(x => x.id !== id);
-      saveRecord(WORKOUTS_KEY, parsed);
-    }
+  deleteWorkout: async (userId: string, id: string): Promise<void> => {
+    await DB.delete(STORES.WORKOUTS, id);
   },
 
   // --- Body Checks ---
 
-  getBodyChecks: (userId: string): BodyCheckItem[] => {
-    const parsed = getRecord<BodyCheckItem>(BODY_CHECKS_KEY);
-    return parsed[userId] || [];
+  getBodyChecks: async (userId: string): Promise<BodyCheckItem[]> => {
+    return await DB.getAll<BodyCheckItem>(STORES.BODY_CHECKS, 'userId', userId);
   },
 
-  addBodyCheck: (userId: string, item: BodyCheckItem): void => {
-    const parsed = getRecord<BodyCheckItem>(BODY_CHECKS_KEY);
-    if (!parsed[userId]) parsed[userId] = [];
-    parsed[userId].push(item);
-    saveRecord(BODY_CHECKS_KEY, parsed);
+  addBodyCheck: async (userId: string, item: BodyCheckItem): Promise<void> => {
+    await DB.put(STORES.BODY_CHECKS, { ...item, userId });
   },
 
-  deleteBodyCheck: (userId: string, id: string): void => {
-    const parsed = getRecord<BodyCheckItem>(BODY_CHECKS_KEY);
-    if (parsed[userId]) {
-      parsed[userId] = parsed[userId].filter(x => x.id !== id);
-      saveRecord(BODY_CHECKS_KEY, parsed);
-    }
+  deleteBodyCheck: async (userId: string, id: string): Promise<void> => {
+    await DB.delete(STORES.BODY_CHECKS, id);
   },
 
   // --- Daily Stats (Weight / Note) ---
 
-  getDailyStats: (userId: string): DailyStats[] => {
-    const parsed = getRecord<DailyStats>(DAILY_STATS_KEY);
-    return parsed[userId] || [];
+  getDailyStats: async (userId: string): Promise<DailyStats[]> => {
+    // In IDB we store with ID = userId_date. 
+    // We fetch all by userId index.
+    return await DB.getAll<DailyStats>(STORES.DAILY_STATS, 'userId', userId);
   },
 
-  saveDailyStats: (userId: string, stats: DailyStats): void => {
-    const parsed = getRecord<DailyStats>(DAILY_STATS_KEY);
-    if (!parsed[userId]) parsed[userId] = [];
-    
-    const existingIndex = parsed[userId].findIndex(s => s.date === stats.date);
-    if (existingIndex >= 0) {
-      parsed[userId][existingIndex] = stats;
-    } else {
-      parsed[userId].push(stats);
-    }
-    saveRecord(DAILY_STATS_KEY, parsed);
+  saveDailyStats: async (userId: string, stats: DailyStats): Promise<void> => {
+    const id = `${userId}_${stats.date}`;
+    await DB.put(STORES.DAILY_STATS, { ...stats, id, userId });
   },
 
   // --- Personal Food Database ---
 
-  getSavedFoods: (userId: string): SavedFoodItem[] => {
-    const parsed = getRecord<SavedFoodItem>(SAVED_FOODS_KEY);
-    return parsed[userId] || [];
+  getSavedFoods: async (userId: string): Promise<SavedFoodItem[]> => {
+    const foods = await DB.getAll<SavedFoodItem>(STORES.SAVED_FOODS, 'userId', userId);
+    return foods.sort((a, b) => b.timesUsed - a.timesUsed);
   },
 
-  saveFoodToDatabase: (userId: string, item: Omit<SavedFoodItem, 'id' | 'timesUsed'>): void => {
-    const parsed = getRecord<SavedFoodItem>(SAVED_FOODS_KEY);
-    if (!parsed[userId]) parsed[userId] = [];
-    
-    const existingIndex = parsed[userId].findIndex(f => f.name.toLowerCase() === item.name.toLowerCase());
-    
-    if (existingIndex >= 0) {
-      parsed[userId][existingIndex] = {
-        ...parsed[userId][existingIndex],
+  saveFoodToDatabase: async (userId: string, item: Omit<SavedFoodItem, 'id' | 'timesUsed'>): Promise<void> => {
+    const foods = await StorageService.getSavedFoods(userId);
+    const existing = foods.find(f => f.name.toLowerCase() === item.name.toLowerCase());
+
+    if (existing) {
+      await DB.put(STORES.SAVED_FOODS, {
+        ...existing,
         ...item,
-        timesUsed: (parsed[userId][existingIndex].timesUsed || 0) + 1
-      };
+        timesUsed: (existing.timesUsed || 0) + 1,
+        userId
+      });
     } else {
-      parsed[userId].push({
+      const newItem: SavedFoodItem & { userId: string } = {
         ...item,
         id: Math.random().toString(36).substring(2, 9),
-        timesUsed: 1
-      });
+        timesUsed: 1,
+        userId
+      };
+      await DB.put(STORES.SAVED_FOODS, newItem);
     }
-    
-    parsed[userId].sort((a, b) => b.timesUsed - a.timesUsed);
-    saveRecord(SAVED_FOODS_KEY, parsed);
   },
 
   // --- Backup / Restore ---
   
-  createBackup: (): string => {
+  createBackup: async (): Promise<string> => {
+    const users = await DB.getAll<UserProfile>(STORES.USERS);
+    const logsArr = await DB.getAll<FoodLogItem & {userId: string}>(STORES.LOGS);
+    const workoutsArr = await DB.getAll<WorkoutLogItem & {userId: string}>(STORES.WORKOUTS);
+    const bodyChecksArr = await DB.getAll<BodyCheckItem & {userId: string}>(STORES.BODY_CHECKS);
+    const savedFoodsArr = await DB.getAll<SavedFoodItem & {userId: string}>(STORES.SAVED_FOODS);
+    const dailyStatsArr = await DB.getAll<DailyStats & {userId: string}>(STORES.DAILY_STATS);
+
+    // Group by UserID for the JSON format (to match old structure roughly or just dump flat lists)
+    // To minimize complexity, we'll group them so restore logic is cleaner
+    const groupBy = (arr: any[]) => {
+      return arr.reduce((acc, curr) => {
+        const uid = curr.userId;
+        if (!acc[uid]) acc[uid] = [];
+        acc[uid].push(curr);
+        return acc;
+      }, {});
+    };
+
     const backup: DataBackup = {
-      version: 2,
-      users: StorageService.getUsers(),
-      logs: getRecord<FoodLogItem>(LOGS_KEY),
-      workouts: getRecord<WorkoutLogItem>(WORKOUTS_KEY),
-      bodyChecks: getRecord<BodyCheckItem>(BODY_CHECKS_KEY),
-      savedFoods: getRecord<SavedFoodItem>(SAVED_FOODS_KEY),
-      dailyStats: getRecord<DailyStats>(DAILY_STATS_KEY),
+      version: 3, // IDB Version
+      users: users,
+      logs: groupBy(logsArr),
+      workouts: groupBy(workoutsArr),
+      bodyChecks: groupBy(bodyChecksArr),
+      savedFoods: groupBy(savedFoodsArr),
+      dailyStats: groupBy(dailyStatsArr),
     };
     return JSON.stringify(backup, null, 2);
   },
 
-  restoreBackup: (jsonString: string): boolean => {
+  restoreBackup: async (jsonString: string): Promise<boolean> => {
     try {
       const data: DataBackup = JSON.parse(jsonString);
-      if (!data.users || !data.logs) return false;
+      if (!data.users) return false;
 
-      localStorage.setItem(USERS_KEY, JSON.stringify(data.users));
-      localStorage.setItem(LOGS_KEY, JSON.stringify(data.logs));
-      if (data.workouts) localStorage.setItem(WORKOUTS_KEY, JSON.stringify(data.workouts));
-      if (data.bodyChecks) localStorage.setItem(BODY_CHECKS_KEY, JSON.stringify(data.bodyChecks));
-      if (data.savedFoods) localStorage.setItem(SAVED_FOODS_KEY, JSON.stringify(data.savedFoods));
-      if (data.dailyStats) localStorage.setItem(DAILY_STATS_KEY, JSON.stringify(data.dailyStats));
+      // Clear existing DB? Or Merge? Let's Clear to be safe on restore
+      await DB.clear(STORES.USERS);
+      await DB.clear(STORES.LOGS);
+      await DB.clear(STORES.WORKOUTS);
+      await DB.clear(STORES.BODY_CHECKS);
+      await DB.clear(STORES.SAVED_FOODS);
+      await DB.clear(STORES.DAILY_STATS);
+
+      // Restore Users
+      for (const u of data.users) await DB.put(STORES.USERS, u);
+
+      // Helper to flatten record to array with userId
+      const restoreStore = async (store: string, record: Record<string, any[]>) => {
+        if (!record) return;
+        for (const [uid, items] of Object.entries(record)) {
+          for (const item of items) {
+            // Ensure userId is present (backup from V2 might have it in key only)
+            // For DailyStats, ensure ID is present
+            if (store === STORES.DAILY_STATS && !item.id) {
+               item.id = `${uid}_${item.date}`;
+            }
+            await DB.put(store, { ...item, userId: uid });
+          }
+        }
+      };
+
+      await restoreStore(STORES.LOGS, data.logs);
+      await restoreStore(STORES.WORKOUTS, data.workouts);
+      await restoreStore(STORES.BODY_CHECKS, data.bodyChecks);
+      await restoreStore(STORES.SAVED_FOODS, data.savedFoods);
+      await restoreStore(STORES.DAILY_STATS, data.dailyStats);
       
       return true;
     } catch (e) {
