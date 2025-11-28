@@ -1,5 +1,5 @@
 
-import { UserProfile, FoodLogItem, SavedFoodItem, WorkoutLogItem, BodyCheckItem, DataBackup } from '../types';
+import { UserProfile, FoodLogItem, SavedFoodItem, WorkoutLogItem, BodyCheckItem, DataBackup, DailyStats } from '../types';
 
 const USERS_KEY = 'nutritrack_users';
 const LOGS_KEY = 'nutritrack_logs';
@@ -7,6 +7,7 @@ const SAVED_FOODS_KEY = 'nutritrack_saved_foods';
 const CURRENT_USER_ID_KEY = 'nutritrack_current_user_id';
 const WORKOUTS_KEY = 'nutritrack_workouts';
 const BODY_CHECKS_KEY = 'nutritrack_body_checks';
+const DAILY_STATS_KEY = 'nutritrack_daily_stats';
 
 // Helper for Record<string, T[]> parsing
 const getRecord = <T>(key: string): Record<string, T[]> => {
@@ -130,6 +131,26 @@ export const StorageService = {
     }
   },
 
+  // --- Daily Stats (Weight / Note) ---
+
+  getDailyStats: (userId: string): DailyStats[] => {
+    const parsed = getRecord<DailyStats>(DAILY_STATS_KEY);
+    return parsed[userId] || [];
+  },
+
+  saveDailyStats: (userId: string, stats: DailyStats): void => {
+    const parsed = getRecord<DailyStats>(DAILY_STATS_KEY);
+    if (!parsed[userId]) parsed[userId] = [];
+    
+    const existingIndex = parsed[userId].findIndex(s => s.date === stats.date);
+    if (existingIndex >= 0) {
+      parsed[userId][existingIndex] = stats;
+    } else {
+      parsed[userId].push(stats);
+    }
+    saveRecord(DAILY_STATS_KEY, parsed);
+  },
+
   // --- Personal Food Database ---
 
   getSavedFoods: (userId: string): SavedFoodItem[] => {
@@ -165,12 +186,13 @@ export const StorageService = {
   
   createBackup: (): string => {
     const backup: DataBackup = {
-      version: 1,
+      version: 2,
       users: StorageService.getUsers(),
       logs: getRecord<FoodLogItem>(LOGS_KEY),
       workouts: getRecord<WorkoutLogItem>(WORKOUTS_KEY),
       bodyChecks: getRecord<BodyCheckItem>(BODY_CHECKS_KEY),
       savedFoods: getRecord<SavedFoodItem>(SAVED_FOODS_KEY),
+      dailyStats: getRecord<DailyStats>(DAILY_STATS_KEY),
     };
     return JSON.stringify(backup, null, 2);
   },
@@ -185,6 +207,7 @@ export const StorageService = {
       if (data.workouts) localStorage.setItem(WORKOUTS_KEY, JSON.stringify(data.workouts));
       if (data.bodyChecks) localStorage.setItem(BODY_CHECKS_KEY, JSON.stringify(data.bodyChecks));
       if (data.savedFoods) localStorage.setItem(SAVED_FOODS_KEY, JSON.stringify(data.savedFoods));
+      if (data.dailyStats) localStorage.setItem(DAILY_STATS_KEY, JSON.stringify(data.dailyStats));
       
       return true;
     } catch (e) {

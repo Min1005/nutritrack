@@ -1,13 +1,14 @@
 
 import React, { useState } from 'react';
 import { getMonthDays, getMonthName } from '../utils/dateUtils';
-import { FoodLogItem, WorkoutLogItem, BodyCheckItem, UserProfile } from '../types';
+import { FoodLogItem, WorkoutLogItem, BodyCheckItem, UserProfile, DailyStats } from '../types';
 
 interface CalendarViewProps {
   user: UserProfile;
   logs: FoodLogItem[];
   workouts: WorkoutLogItem[];
   bodyChecks: BodyCheckItem[];
+  dailyStats: DailyStats[];
   onSelectDate: (date: string) => void;
   onEditProfile: () => void;
   onLogout: () => void;
@@ -15,7 +16,7 @@ interface CalendarViewProps {
 }
 
 const CalendarView: React.FC<CalendarViewProps> = ({ 
-  user, logs, workouts, bodyChecks, onSelectDate, onEditProfile, onLogout, onExport 
+  user, logs, workouts, bodyChecks, dailyStats, onSelectDate, onEditProfile, onLogout, onExport 
 }) => {
   const today = new Date();
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -45,14 +46,17 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     const dayLogs = logs.filter(l => l.date === dateStr);
     const dayWorkouts = workouts.filter(w => w.date === dateStr);
     const dayChecks = bodyChecks.filter(b => b.date === dateStr);
+    const dayStats = dailyStats.find(s => s.date === dateStr);
     
     const totalCals = dayLogs.reduce((acc, curr) => acc + curr.calories, 0);
     
     return {
-      hasData: dayLogs.length > 0 || dayWorkouts.length > 0 || dayChecks.length > 0,
+      hasData: dayLogs.length > 0 || dayWorkouts.length > 0 || dayChecks.length > 0 || !!dayStats,
       calories: totalCals,
       hasWorkout: dayWorkouts.length > 0,
       hasPhoto: dayChecks.length > 0,
+      hasWeight: !!dayStats?.weight,
+      hasNote: !!dayStats?.note,
       isGoalMet: totalCals > 0 && Math.abs(totalCals - user.targetCalories) < 200 // Within 200 cal range
     };
   };
@@ -136,9 +140,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                  <span className={`text-sm font-medium ${isToday ? 'text-emerald-700' : 'text-gray-700'}`}>{dayNum}</span>
                  
                  {/* Indicators */}
-                 <div className="flex gap-0.5 mt-1">
+                 <div className="flex gap-0.5 mt-1 flex-wrap justify-center px-1">
                     {stats.hasWorkout && <div className="w-1.5 h-1.5 rounded-full bg-blue-400" title="Workout"></div>}
                     {stats.hasPhoto && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" title="Body Check"></div>}
+                    {stats.hasWeight && <span className="text-[8px] leading-none" title="Weight Recorded">⚖️</span>}
+                    {stats.hasNote && <span className="text-[8px] leading-none" title="Note Recorded">📝</span>}
                  </div>
 
                  {stats.calories > 0 && (

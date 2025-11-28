@@ -77,6 +77,13 @@ export interface BodyCheckItem {
   timestamp: number;
 }
 
+export interface DailyStats {
+  date: string; // YYYY-MM-DD
+  weight?: number; // kg
+  bodyFat?: number; // %
+  note?: string;
+}
+
 export interface DataBackup {
   version: number;
   users: UserProfile[];
@@ -84,4 +91,5 @@ export interface DataBackup {
   workouts: Record<string, WorkoutLogItem[]>;
   bodyChecks: Record<string, BodyCheckItem[]>;
   savedFoods: Record<string, SavedFoodItem[]>;
+  dailyStats: Record<string, DailyStats[]>;
 }

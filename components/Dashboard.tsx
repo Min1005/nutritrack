@@ -1,6 +1,6 @@
 
-import React, { useState, useMemo } from 'react';
-import { UserProfile, FoodLogItem, WorkoutLogItem, BodyCheckItem } from '../types';
+import React, { useState, useMemo, useEffect } from 'react';
+import { UserProfile, FoodLogItem, WorkoutLogItem, BodyCheckItem, DailyStats } from '../types';
 import { formatDateReadable } from '../utils/calculations';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import FitnessTracker from './FitnessTracker';
@@ -11,6 +11,8 @@ interface DayDetailProps {
   logs: FoodLogItem[];
   workouts: WorkoutLogItem[];
   bodyChecks: BodyCheckItem[];
+  dailyStats?: DailyStats;
+  onUpdateDailyStats: (stats: DailyStats) => void;
   onBack: () => void;
   // Food Actions
   onDeleteLog: (id: string) => void;
@@ -24,11 +26,34 @@ interface DayDetailProps {
 }
 
 const Dashboard: React.FC<DayDetailProps> = ({ 
-  user, date, logs, workouts, bodyChecks, onBack,
+  user, date, logs, workouts, bodyChecks, dailyStats, onUpdateDailyStats, onBack,
   onDeleteLog, onAddFood, onEditLog,
   onAddWorkout, onDeleteWorkout, onAddBodyCheck, onDeleteBodyCheck 
 }) => {
   const [activeTab, setActiveTab] = useState<'nutrition' | 'fitness'>('nutrition');
+  
+  // Daily Stats Local State
+  const [weight, setWeight] = useState(dailyStats?.weight?.toString() || '');
+  const [bodyFat, setBodyFat] = useState(dailyStats?.bodyFat?.toString() || '');
+  const [note, setNote] = useState(dailyStats?.note || '');
+  const [isStatsExpanded, setIsStatsExpanded] = useState(false);
+
+  // Sync with props
+  useEffect(() => {
+    setWeight(dailyStats?.weight?.toString() || '');
+    setBodyFat(dailyStats?.bodyFat?.toString() || '');
+    setNote(dailyStats?.note || '');
+  }, [dailyStats, date]);
+
+  const handleStatsSave = () => {
+    onUpdateDailyStats({
+      date,
+      weight: weight ? parseFloat(weight) : undefined,
+      bodyFat: bodyFat ? parseFloat(bodyFat) : undefined,
+      note: note.trim() || undefined
+    });
+    setIsStatsExpanded(false);
+  };
 
   // Nutrition Calcs
   const todaysLogs = useMemo(() => logs.filter(log => log.date === date), [logs, date]);
@@ -64,11 +89,60 @@ const Dashboard: React.FC<DayDetailProps> = ({
         <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full text-gray-500">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         </button>
-        <div>
+        <div className="flex-1">
            <h2 className="text-lg font-bold text-gray-800">{formatDateReadable(date)}</h2>
            <p className="text-xs text-gray-500">Daily Log</p>
         </div>
+        <button 
+          onClick={() => setIsStatsExpanded(!isStatsExpanded)}
+          className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition ${dailyStats?.weight || dailyStats?.note ? 'bg-indigo-50 text-indigo-600' : 'bg-gray-100 text-gray-500'}`}
+        >
+          {dailyStats?.weight ? `${dailyStats.weight}kg` : 'Record Stats'} ✏️
+        </button>
       </div>
+
+      {/* Daily Stats Section (Collapsible) */}
+      {isStatsExpanded && (
+        <div className="bg-white p-4 rounded-xl shadow-md border border-indigo-100 animate-fade-in">
+          <h3 className="font-bold text-gray-800 mb-3 text-sm">Daily Progress & Notes</h3>
+          <div className="grid grid-cols-2 gap-4 mb-3">
+             <div>
+               <label className="block text-xs font-semibold text-gray-500 mb-1">Weight (kg)</label>
+               <input 
+                 type="number" step="0.1" placeholder="e.g. 70.5"
+                 className="w-full border rounded-lg p-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                 value={weight}
+                 onChange={e => setWeight(e.target.value)}
+               />
+             </div>
+             <div>
+               <label className="block text-xs font-semibold text-gray-500 mb-1">Body Fat (%)</label>
+               <input 
+                 type="number" step="0.1" placeholder="e.g. 15.5"
+                 className="w-full border rounded-lg p-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                 value={bodyFat}
+                 onChange={e => setBodyFat(e.target.value)}
+               />
+             </div>
+          </div>
+          <div className="mb-3">
+             <label className="block text-xs font-semibold text-gray-500 mb-1">Journal / Notes</label>
+             <textarea 
+               rows={3}
+               className="w-full border rounded-lg p-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+               placeholder="How did you feel today? Any cheat meals? Good workout?"
+               value={note}
+               onChange={e => setNote(e.target.value)}
+             />
+          </div>
+          <button 
+            onClick={handleStatsSave}
+            className="w-full bg-indigo-600 text-white py-2 rounded-lg font-bold hover:bg-indigo-700 transition"
+          >
+            Save Daily Stats
+          </button>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">

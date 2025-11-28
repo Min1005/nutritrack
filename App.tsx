@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { StorageService } from './services/storageService';
-import { UserProfile, FoodLogItem, MacroNutrients, WorkoutLogItem, BodyCheckItem, IngredientItem } from './types';
-import { generateId, getTodayDateString } from './utils/calculations';
+import { UserProfile, FoodLogItem, MacroNutrients, WorkoutLogItem, BodyCheckItem, IngredientItem, DailyStats } from './types';
+import { generateId, getTodayDateString, calculateBMR, calculateTDEE, calculateTargetCalories } from './utils/calculations';
 import ProfileForm from './components/ProfileForm';
 import Dashboard from './components/Dashboard'; // This is now Day Detail View
 import CalendarView from './components/CalendarView';
@@ -16,6 +16,7 @@ const App: React.FC = () => {
   const [logs, setLogs] = useState<FoodLogItem[]>([]);
   const [workouts, setWorkouts] = useState<WorkoutLogItem[]>([]);
   const [bodyChecks, setBodyChecks] = useState<BodyCheckItem[]>([]);
+  const [dailyStats, setDailyStats] = useState<DailyStats[]>([]);
   
   // View States
   const [viewMode, setViewMode] = useState<'calendar' | 'day'>('calendar');
@@ -51,6 +52,7 @@ const App: React.FC = () => {
     setLogs(StorageService.getLogs(user.id));
     setWorkouts(StorageService.getWorkouts(user.id));
     setBodyChecks(StorageService.getBodyChecks(user.id));
+    setDailyStats(StorageService.getDailyStats(user.id));
     
     setIsEditingProfile(false);
     setIsCreatingNewUser(false);
@@ -63,6 +65,7 @@ const App: React.FC = () => {
     setLogs([]);
     setWorkouts([]);
     setBodyChecks([]);
+    setDailyStats([]);
   };
 
   // --- Actions ---
@@ -72,6 +75,47 @@ const App: React.FC = () => {
     const updatedUsers = StorageService.getUsers();
     setUsers(updatedUsers);
     loginUser(profile);
+  };
+
+  const handleUpdateDailyStats = (stats: DailyStats) => {
+    if (!currentUser) return;
+
+    // 1. Save Stats
+    StorageService.saveDailyStats(currentUser.id, stats);
+    
+    // 2. Update Local State
+    setDailyStats(prev => {
+      const index = prev.findIndex(s => s.date === stats.date);
+      if (index >= 0) {
+        const newStats = [...prev];
+        newStats[index] = stats;
+        return newStats;
+      }
+      return [...prev, stats];
+    });
+
+    // 3. Dynamic TDEE Update (Only if weight changed for TODAY)
+    const todayStr = getTodayDateString();
+    if (stats.date === todayStr && stats.weight && stats.weight !== currentUser.weight) {
+      const newWeight = stats.weight;
+      
+      // Recalculate Logic
+      const bmr = calculateBMR(newWeight, currentUser.height, currentUser.age, currentUser.gender);
+      const tdee = calculateTDEE(bmr, currentUser.activityLevel);
+      const targetCalories = calculateTargetCalories(tdee, currentUser.goal);
+
+      const updatedUser: UserProfile = {
+        ...currentUser,
+        weight: newWeight,
+        tdee,
+        targetCalories
+      };
+
+      // Save updated user profile
+      StorageService.saveUser(updatedUser);
+      setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+      setCurrentUser(updatedUser);
+    }
   };
 
   const handleExportData = () => {
@@ -259,6 +303,7 @@ const App: React.FC = () => {
               logs={logs}
               workouts={workouts}
               bodyChecks={bodyChecks}
+              dailyStats={dailyStats}
               onSelectDate={handleDateSelect}
               onEditProfile={() => setIsEditingProfile(true)}
               onLogout={logoutUser}
@@ -271,6 +316,8 @@ const App: React.FC = () => {
               logs={logs}
               workouts={workouts}
               bodyChecks={bodyChecks}
+              dailyStats={dailyStats.find(s => s.date === selectedDate)}
+              onUpdateDailyStats={handleUpdateDailyStats}
               onBack={() => setViewMode('calendar')}
               onDeleteLog={handleDeleteLog}
               onAddFood={() => {
