@@ -1,14 +1,16 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { analyzeFoodWithGemini, analyzeSingleIngredient, hasApiKey, IngredientItem } from '../services/geminiService';
-import { MacroNutrients, SavedFoodItem } from '../types';
+import { analyzeFoodWithGemini, analyzeSingleIngredient, hasApiKey } from '../services/geminiService';
+import { MacroNutrients, SavedFoodItem, FoodLogItem, IngredientItem } from '../types';
 import { StorageService } from '../services/storageService';
 import { compressImage } from '../utils/imageUtils';
 import { commonFoodDatabase } from '../utils/foodData';
 
 interface FoodLoggerProps {
   userId: string;
-  onAdd: (name: string, macros: MacroNutrients, image?: string) => void;
+  initialLog?: FoodLogItem | null;
+  onAdd: (name: string, macros: MacroNutrients, image?: string, ingredients?: IngredientItem[]) => void;
+  onUpdate?: (log: FoodLogItem) => void;
   onCancel: () => void;
 }
 
@@ -17,7 +19,7 @@ interface EditableIngredient extends IngredientItem {
   isLoading?: boolean;
 }
 
-const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
+const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUpdate, onCancel }) => {
   const [mode, setMode] = useState<'ai' | 'manual'>('ai');
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -42,15 +44,41 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
   const [manualCarbs, setManualCarbs] = useState('');
   const [manualFat, setManualFat] = useState('');
 
-  // Load saved foods on mount
+  // Initialize for Editing
   useEffect(() => {
-    const foods = StorageService.getSavedFoods(userId);
-    setSavedFoods(foods);
-  }, [userId]);
+    if (initialLog) {
+      setMode('ai'); // Use AI view structure for editing
+      setOverallName(initialLog.name);
+      setSelectedImage(initialLog.image || null);
+      
+      if (initialLog.ingredients && initialLog.ingredients.length > 0) {
+        setIngredients(initialLog.ingredients.map(ing => ({
+          ...ing,
+          id: Math.random().toString(36).substr(2, 9),
+          isLoading: false
+        })));
+      } else {
+        // Fallback for logs without ingredients
+        setIngredients([{
+          id: 'default',
+          name: initialLog.name,
+          calories: initialLog.calories,
+          protein: initialLog.protein,
+          carbs: initialLog.carbs,
+          fat: initialLog.fat,
+          isLoading: false
+        }]);
+      }
+    } else {
+      // Load saved foods only if not editing
+      const foods = StorageService.getSavedFoods(userId);
+      setSavedFoods(foods);
+    }
+  }, [userId, initialLog]);
 
   // Filter foods when input changes
   useEffect(() => {
-    if (mode === 'ai' && input.trim() && !selectedImage) {
+    if (mode === 'ai' && input.trim() && !selectedImage && !initialLog) {
       const search = input.toLowerCase();
       
       const userMatches = savedFoods.filter(food => 
@@ -71,7 +99,7 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
     } else {
       setFilteredFoods([]);
     }
-  }, [input, savedFoods, mode, selectedImage]);
+  }, [input, savedFoods, mode, selectedImage, initialLog]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -185,29 +213,40 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
     }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
   };
 
-  const handleConfirmAi = () => {
+  const handleConfirm = () => {
     if (ingredients.length > 0) {
       const totals = calculateTotal();
       
-      // Create a description string of what was eaten
-      const description = ingredients.map(i => i.name).join(', ');
-      const finalName = `${overallName} (${description})`;
+      // Clean ingredients for storage (remove ID and loading state)
+      const cleanIngredients: IngredientItem[] = ingredients.map(({ id, isLoading, ...rest }) => rest);
 
-      // 1. Add to Log
-      onAdd(
-        overallName, 
-        totals,
-        selectedImage || undefined
-      );
+      if (initialLog && onUpdate) {
+        // UPDATE MODE
+        onUpdate({
+          ...initialLog,
+          name: overallName,
+          ...totals,
+          ingredients: cleanIngredients,
+          image: selectedImage || undefined
+        });
+      } else {
+        // ADD MODE
+        onAdd(
+          overallName, 
+          totals,
+          selectedImage || undefined,
+          cleanIngredients
+        );
 
-      // 2. Save to Database (We save the main dish name with total macros)
-      StorageService.saveFoodToDatabase(userId, {
-        name: overallName, 
-        calories: totals.calories,
-        protein: totals.protein,
-        carbs: totals.carbs,
-        fat: totals.fat
-      });
+        // Save to Database only on new adds
+        StorageService.saveFoodToDatabase(userId, {
+          name: overallName, 
+          calories: totals.calories,
+          protein: totals.protein,
+          carbs: totals.carbs,
+          fat: totals.fat
+        });
+      }
     }
   };
 
@@ -221,24 +260,22 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
       fat: parseFloat(manualFat) || 0,
     };
 
-    onAdd(manualName, foodData, selectedImage || undefined);
+    onAdd(manualName, foodData, selectedImage || undefined, []);
     StorageService.saveFoodToDatabase(userId, foodData);
   };
 
   const handleSelectSavedFood = (food: SavedFoodItem) => {
-    onAdd(food.name, {
-      calories: food.calories,
-      protein: food.protein,
-      carbs: food.carbs,
-      fat: food.fat
-    });
-    StorageService.saveFoodToDatabase(userId, {
+    // When selecting saved food, treat it as "AI Result" with 1 ingredient for consistency
+    setOverallName(food.name);
+    setIngredients([{
+        id: 'saved-1',
         name: food.name,
         calories: food.calories,
         protein: food.protein,
         carbs: food.carbs,
-        fat: food.fat
-    });
+        fat: food.fat,
+        isLoading: false
+    }]);
   };
 
   const totals = calculateTotal();
@@ -248,90 +285,94 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
       <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="bg-emerald-600 p-4 flex justify-between items-center shrink-0">
-          <h2 className="text-white font-bold text-lg">Log Food</h2>
+          <h2 className="text-white font-bold text-lg">{initialLog ? 'Edit Log' : 'Log Food'}</h2>
           <button onClick={onCancel} className="text-white hover:text-emerald-100 p-1 rounded-full hover:bg-emerald-700 transition">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
 
-        {/* Mode Toggle */}
-        <div className="flex border-b shrink-0">
-          <button 
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${mode === 'ai' ? 'text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
-            onClick={() => setMode('ai')}
-          >
-            ✨ Search / AI
-          </button>
-          <button 
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${mode === 'manual' ? 'text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
-            onClick={() => setMode('manual')}
-          >
-            ✏️ Manual Entry
-          </button>
-        </div>
+        {/* Mode Toggle (Hidden if editing) */}
+        {!initialLog && (
+          <div className="flex border-b shrink-0">
+            <button 
+              className={`flex-1 py-3 text-sm font-medium transition-colors ${mode === 'ai' ? 'text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+              onClick={() => setMode('ai')}
+            >
+              ✨ Search / AI
+            </button>
+            <button 
+              className={`flex-1 py-3 text-sm font-medium transition-colors ${mode === 'manual' ? 'text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+              onClick={() => setMode('manual')}
+            >
+              ✏️ Manual Entry
+            </button>
+          </div>
+        )}
 
         <div className="p-6 overflow-y-auto custom-scrollbar">
           {mode === 'ai' ? (
             <div className="space-y-4">
               
-              {/* Image Input Area */}
-              <div className="flex items-center gap-3">
-                 <input 
-                   type="file" 
-                   accept="image/*" 
-                   ref={fileInputRef}
-                   className="hidden"
-                   onChange={handleImageUpload}
-                 />
-                 
-                 {!selectedImage ? (
-                   <button 
-                     onClick={() => fileInputRef.current?.click()}
-                     className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:bg-gray-200 hover:text-emerald-600 transition"
-                   >
-                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                   </button>
-                 ) : (
-                   <div className="relative w-20 h-20 shrink-0">
-                     <img src={selectedImage} alt="Preview" className="w-full h-full object-cover rounded-lg border" />
+              {/* Image & Search Area (Hidden if ingredients already loaded/editing) */}
+              {ingredients.length === 0 && !initialLog && (
+                <div className="flex items-center gap-3">
+                   <input 
+                     type="file" 
+                     accept="image/*" 
+                     ref={fileInputRef}
+                     className="hidden"
+                     onChange={handleImageUpload}
+                   />
+                   
+                   {!selectedImage ? (
                      <button 
-                       onClick={clearImage}
-                       className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600"
+                       onClick={() => fileInputRef.current?.click()}
+                       className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:bg-gray-200 hover:text-emerald-600 transition"
                      >
-                       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                      </button>
-                   </div>
-                 )}
+                   ) : (
+                     <div className="relative w-20 h-20 shrink-0">
+                       <img src={selectedImage} alt="Preview" className="w-full h-full object-cover rounded-lg border" />
+                       <button 
+                         onClick={clearImage}
+                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600"
+                       >
+                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                       </button>
+                     </div>
+                   )}
 
-                 <div className="relative flex-grow">
-                    <input 
-                      type="text" 
-                      value={input}
-                      onChange={(e) => {
-                        setInput(e.target.value);
-                        setIngredients([]);
-                      }}
-                      placeholder={selectedImage ? "Describe food (Optional)..." : "e.g. 雞胸肉"}
-                      className="w-full border border-gray-300 rounded-lg pl-4 pr-12 py-3 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-sm text-lg"
-                      onKeyDown={(e) => e.key === 'Enter' && handleAiAnalyze()}
-                      autoFocus={!selectedImage}
-                    />
-                    <button 
-                      onClick={handleAiAnalyze}
-                      disabled={loading || (!input && !selectedImage)}
-                      className="absolute right-2 top-2 bottom-2 bg-emerald-600 text-white px-3 rounded-md disabled:opacity-50 hover:bg-emerald-700 transition-colors flex items-center justify-center"
-                    >
-                      {loading ? (
-                        <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                      )}
-                    </button>
-                 </div>
-              </div>
+                   <div className="relative flex-grow">
+                      <input 
+                        type="text" 
+                        value={input}
+                        onChange={(e) => {
+                          setInput(e.target.value);
+                          setIngredients([]);
+                        }}
+                        placeholder={selectedImage ? "Describe food (Optional)..." : "e.g. 雞胸肉"}
+                        className="w-full border border-gray-300 rounded-lg pl-4 pr-12 py-3 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-sm text-lg"
+                        onKeyDown={(e) => e.key === 'Enter' && handleAiAnalyze()}
+                        autoFocus={!selectedImage}
+                      />
+                      <button 
+                        onClick={handleAiAnalyze}
+                        disabled={loading || (!input && !selectedImage)}
+                        className="absolute right-2 top-2 bottom-2 bg-emerald-600 text-white px-3 rounded-md disabled:opacity-50 hover:bg-emerald-700 transition-colors flex items-center justify-center"
+                      >
+                        {loading ? (
+                          <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        )}
+                      </button>
+                   </div>
+                </div>
+              )}
 
               {/* Suggestions */}
-              {input && filteredFoods.length > 0 && ingredients.length === 0 && !selectedImage && (
+              {input && filteredFoods.length > 0 && ingredients.length === 0 && !selectedImage && !initialLog && (
                 <div className="space-y-2 animate-fade-in">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Suggestions</p>
                   {filteredFoods.map(food => (
@@ -349,16 +390,16 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
 
               {error && <p className="text-red-500 text-sm text-center bg-red-50 p-2 rounded">{error}</p>}
 
-              {/* AI Result / Editable Ingredient List */}
+              {/* Ingredient Editor (Always shown if ingredients exist) */}
               {ingredients.length > 0 && (
                 <div className="bg-emerald-50 rounded-xl border border-emerald-100 animate-fade-in shadow-sm overflow-hidden">
                   <div className="p-4 bg-emerald-100 border-b border-emerald-200 flex justify-between items-center">
-                     <div>
-                        <span className="text-xs font-bold text-emerald-600 uppercase tracking-wide">Breakdown</span>
+                     <div className="w-2/3">
+                        <span className="text-xs font-bold text-emerald-600 uppercase tracking-wide">Meal Name</span>
                         <input 
                            value={overallName} 
                            onChange={e => setOverallName(e.target.value)}
-                           className="block w-full bg-transparent font-bold text-xl text-gray-800 focus:outline-none border-b border-transparent focus:border-emerald-500"
+                           className="block w-full bg-transparent font-bold text-lg text-gray-800 focus:outline-none border-b border-dashed border-emerald-400 focus:border-emerald-600"
                         />
                      </div>
                      <div className="text-right">
@@ -366,8 +407,15 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
                        <p className="font-bold text-lg text-emerald-800">{Math.round(totals.calories)} <span className="text-xs">kcal</span></p>
                      </div>
                   </div>
+                  
+                  {/* If editing and has image, show it small */}
+                  {initialLog && selectedImage && (
+                    <div className="bg-emerald-50 px-4 pt-2">
+                       <img src={selectedImage} alt="Food" className="w-16 h-16 rounded object-cover border border-emerald-200" />
+                    </div>
+                  )}
 
-                  <div className="divide-y divide-emerald-100">
+                  <div className="divide-y divide-emerald-100 max-h-60 overflow-y-auto">
                      {ingredients.map((item, index) => (
                        <div key={item.id} className="p-3 bg-white hover:bg-gray-50 transition">
                          <div className="flex gap-2 mb-2">
@@ -416,10 +464,10 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, onAdd, onCancel }) => {
 
                   <div className="p-3">
                     <button 
-                      onClick={handleConfirmAi}
+                      onClick={handleConfirm}
                       className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 font-bold shadow-md hover:shadow-lg transition-all transform active:scale-95"
                     >
-                      Confirm & Add Log
+                      {initialLog ? 'Save Changes' : 'Confirm & Add Log'}
                     </button>
                   </div>
                 </div>

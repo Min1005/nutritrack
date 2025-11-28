@@ -67,6 +67,17 @@ export const StorageService = {
     saveRecord(LOGS_KEY, parsedLogs);
   },
 
+  updateLog: (userId: string, updatedLog: FoodLogItem): void => {
+    const parsedLogs = getRecord<FoodLogItem>(LOGS_KEY);
+    if (parsedLogs[userId]) {
+      const index = parsedLogs[userId].findIndex(l => l.id === updatedLog.id);
+      if (index !== -1) {
+        parsedLogs[userId][index] = updatedLog;
+        saveRecord(LOGS_KEY, parsedLogs);
+      }
+    }
+  },
+
   deleteLog: (userId: string, logId: string): void => {
     const parsedLogs = getRecord<FoodLogItem>(LOGS_KEY);
     if (parsedLogs[userId]) {

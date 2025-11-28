@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { StorageService } from './services/storageService';
-import { UserProfile, FoodLogItem, MacroNutrients, WorkoutLogItem, BodyCheckItem } from './types';
+import { UserProfile, FoodLogItem, MacroNutrients, WorkoutLogItem, BodyCheckItem, IngredientItem } from './types';
 import { generateId, getTodayDateString } from './utils/calculations';
 import ProfileForm from './components/ProfileForm';
 import Dashboard from './components/Dashboard'; // This is now Day Detail View
@@ -25,6 +25,7 @@ const App: React.FC = () => {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isAddingFood, setIsAddingFood] = useState(false);
   const [isCreatingNewUser, setIsCreatingNewUser] = useState(false);
+  const [editingLog, setEditingLog] = useState<FoodLogItem | null>(null);
 
   // Initial Load
   useEffect(() => {
@@ -90,13 +91,16 @@ const App: React.FC = () => {
     setViewMode('day');
   };
 
-  const handleAddLog = (name: string, macros: MacroNutrients, image?: string) => {
+  // --- Food Logic ---
+
+  const handleAddLog = (name: string, macros: MacroNutrients, image?: string, ingredients?: IngredientItem[]) => {
     if (!currentUser) return;
     const newLog: FoodLogItem = {
       id: generateId(),
       name,
       ...macros,
       image,
+      ingredients,
       timestamp: Date.now(),
       date: selectedDate // Use selected date, not just today
     };
@@ -105,11 +109,26 @@ const App: React.FC = () => {
     setIsAddingFood(false);
   };
 
+  const handleEditLog = (log: FoodLogItem) => {
+    setEditingLog(log);
+    setIsAddingFood(true);
+  };
+
+  const handleUpdateLog = (updatedLog: FoodLogItem) => {
+    if (!currentUser) return;
+    StorageService.updateLog(currentUser.id, updatedLog);
+    setLogs(prev => prev.map(l => l.id === updatedLog.id ? updatedLog : l));
+    setIsAddingFood(false);
+    setEditingLog(null);
+  };
+
   const handleDeleteLog = (logId: string) => {
     if (!currentUser) return;
     StorageService.deleteLog(currentUser.id, logId);
     setLogs(prev => prev.filter(l => l.id !== logId));
   };
+
+  // --- Workout Logic ---
 
   const handleAddWorkout = (item: WorkoutLogItem) => {
     if (!currentUser) return;
@@ -122,6 +141,8 @@ const App: React.FC = () => {
     StorageService.deleteWorkout(currentUser.id, id);
     setWorkouts(prev => prev.filter(w => w.id !== id));
   };
+
+  // --- Body Check Logic ---
 
   const handleAddBodyCheck = (item: BodyCheckItem) => {
     if (!currentUser) return;
@@ -252,7 +273,11 @@ const App: React.FC = () => {
               bodyChecks={bodyChecks}
               onBack={() => setViewMode('calendar')}
               onDeleteLog={handleDeleteLog}
-              onAddFood={() => setIsAddingFood(true)}
+              onAddFood={() => {
+                setEditingLog(null);
+                setIsAddingFood(true);
+              }}
+              onEditLog={handleEditLog}
               onAddWorkout={handleAddWorkout}
               onDeleteWorkout={handleDeleteWorkout}
               onAddBodyCheck={handleAddBodyCheck}
@@ -266,8 +291,13 @@ const App: React.FC = () => {
       {isAddingFood && currentUser && (
         <FoodLogger 
           userId={currentUser.id}
+          initialLog={editingLog}
           onAdd={handleAddLog}
-          onCancel={() => setIsAddingFood(false)}
+          onUpdate={handleUpdateLog}
+          onCancel={() => {
+            setIsAddingFood(false);
+            setEditingLog(null);
+          }}
         />
       )}
     </div>

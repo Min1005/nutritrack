@@ -15,6 +15,7 @@ interface DayDetailProps {
   // Food Actions
   onDeleteLog: (id: string) => void;
   onAddFood: () => void;
+  onEditLog: (log: FoodLogItem) => void;
   // Fitness Actions
   onAddWorkout: (item: WorkoutLogItem) => void;
   onDeleteWorkout: (id: string) => void;
@@ -24,7 +25,7 @@ interface DayDetailProps {
 
 const Dashboard: React.FC<DayDetailProps> = ({ 
   user, date, logs, workouts, bodyChecks, onBack,
-  onDeleteLog, onAddFood, 
+  onDeleteLog, onAddFood, onEditLog,
   onAddWorkout, onDeleteWorkout, onAddBodyCheck, onDeleteBodyCheck 
 }) => {
   const [activeTab, setActiveTab] = useState<'nutrition' | 'fitness'>('nutrition');
@@ -155,7 +156,11 @@ const Dashboard: React.FC<DayDetailProps> = ({
                           <div className="p-8 text-center text-gray-400">No meals tracked for this day.</div>
                       ) : (
                           todaysLogs.map(log => (
-                              <div key={log.id} className="p-4 hover:bg-gray-50 flex justify-between items-center transition">
+                              <div 
+                                key={log.id} 
+                                className="p-4 hover:bg-gray-50 flex justify-between items-center transition cursor-pointer group"
+                                onClick={() => onEditLog(log)}
+                              >
                                   <div className="flex items-center gap-4">
                                       {log.image ? (
                                         <img src={log.image} alt={log.name} className="w-12 h-12 rounded-lg object-cover border border-gray-200" />
@@ -163,11 +168,19 @@ const Dashboard: React.FC<DayDetailProps> = ({
                                         <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-xl border border-gray-200">🍎</div>
                                       )}
                                       <div>
-                                          <p className="font-semibold text-gray-800">{log.name}</p>
+                                          <p className="font-semibold text-gray-800 group-hover:text-emerald-600 flex items-center gap-2">
+                                            {log.name} 
+                                            <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">EDIT</span>
+                                          </p>
                                           <p className="text-xs text-gray-500">{log.calories} kcal • P: {log.protein}g</p>
                                       </div>
                                   </div>
-                                  <button onClick={() => onDeleteLog(log.id)} className="text-red-400 hover:text-red-600 p-2">×</button>
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); onDeleteLog(log.id); }} 
+                                    className="text-gray-300 hover:text-red-500 p-2 transition-colors"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                  </button>
                               </div>
                           ))
                       )}

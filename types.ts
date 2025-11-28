@@ -39,12 +39,17 @@ export interface MacroNutrients {
   fat: number; // g
 }
 
+export interface IngredientItem extends MacroNutrients {
+  name: string; // Ingredient name with weight
+}
+
 export interface FoodLogItem extends MacroNutrients {
   id: string;
   name: string;
   timestamp: number;
   date: string; // YYYY-MM-DD
   image?: string; // Base64 string
+  ingredients?: IngredientItem[]; // Detailed breakdown
 }
 
 export interface SavedFoodItem extends MacroNutrients {
