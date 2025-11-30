@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getMonthDays, getMonthName } from '../utils/dateUtils';
 import { FoodLogItem, WorkoutLogItem, BodyCheckItem, UserProfile, DailyStats } from '../types';
 import { NotificationService } from '../services/notificationService';
@@ -24,6 +24,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [showMenu, setShowMenu] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
+  useEffect(() => {
+    // Check status on mount
+    setNotificationsEnabled(NotificationService.isEnabled());
+  }, [showMenu]); // Re-check when menu opens
 
   const days = getMonthDays(currentYear, currentMonth);
 
@@ -45,12 +51,21 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     }
   };
 
-  const handleEnableNotifications = async () => {
-    const granted = await NotificationService.requestPermission();
-    if (granted) {
-      alert("Reminders enabled! You will be notified at 12:00 PM and 7:00 PM.");
+  const handleToggleNotifications = async () => {
+    if (notificationsEnabled) {
+      // User wants to disable
+      NotificationService.setPreference(false);
+      setNotificationsEnabled(false);
     } else {
-      alert("Permission denied. Please enable notifications in your browser settings.");
+      // User wants to enable
+      const granted = await NotificationService.requestPermission();
+      if (granted) {
+        NotificationService.setPreference(true);
+        setNotificationsEnabled(true);
+        alert("Reminders enabled! You will be notified at 12:00 PM and 7:00 PM.");
+      } else {
+        alert("Permission denied. Please enable notifications in your browser settings.");
+      }
     }
     setShowMenu(false);
   };
@@ -125,10 +140,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                  </button>
 
                  <button 
-                   onClick={handleEnableNotifications}
+                   onClick={handleToggleNotifications}
                    className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition"
                  >
-                   <span>🔔</span> Enable Reminders
+                   <span>{notificationsEnabled ? '🔕' : '🔔'}</span> 
+                   {notificationsEnabled ? 'Disable Reminders' : 'Enable Reminders'}
                  </button>
                  
                  <button 

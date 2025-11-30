@@ -4,6 +4,8 @@ export const NOTIFICATION_KEYS = {
   EVENING: 'evening'
 };
 
+const PREF_KEY = 'nutritrack_notifications_enabled';
+
 export const NotificationService = {
   isSupported: (): boolean => {
     return 'Notification' in window;
@@ -12,6 +14,17 @@ export const NotificationService = {
   getPermission: (): NotificationPermission => {
     if (!('Notification' in window)) return 'denied';
     return Notification.permission;
+  },
+
+  // Checks both Browser Permission AND User Preference
+  isEnabled: (): boolean => {
+    if (!('Notification' in window)) return false;
+    // Enabled if permission is granted AND user hasn't explicitly disabled it in app
+    return Notification.permission === 'granted' && localStorage.getItem(PREF_KEY) !== 'false';
+  },
+
+  setPreference: (enable: boolean) => {
+    localStorage.setItem(PREF_KEY, String(enable));
   },
 
   requestPermission: async (): Promise<boolean> => {
@@ -32,7 +45,8 @@ export const NotificationService = {
   },
 
   checkAndTriggerReminders: () => {
-    if (Notification.permission !== 'granted') return;
+    // Check the comprehensive isEnabled status (Permission + Preference)
+    if (!NotificationService.isEnabled()) return;
 
     const now = new Date();
     const hour = now.getHours();
