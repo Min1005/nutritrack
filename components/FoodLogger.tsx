@@ -198,7 +198,7 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
       ...prev,
       {
         id: Math.random().toString(36).substr(2, 9),
-        name: "New Item (e.g. 滷蛋)",
+        name: "", // Changed to empty string
         calories: 0,
         protein: 0,
         carbs: 0,
@@ -423,6 +423,7 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
                                 setIngredients(prev => prev.map(p => p.id === item.id ? {...p, name: newVal} : p));
                               }}
                               className="flex-grow border border-gray-200 rounded px-2 py-1 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+							  placeholder="New Item (e.g. 滷蛋)"
                             />
                             <button 
                               onClick={() => handleRecalculateRow(item.id, item.name)}
