@@ -1,8 +1,6 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { getMonthDays, getMonthName } from '../utils/dateUtils';
 import { FoodLogItem, WorkoutLogItem, BodyCheckItem, UserProfile, DailyStats } from '../types';
-import { NotificationService } from '../services/notificationService';
 
 interface CalendarViewProps {
   user: UserProfile;
@@ -11,25 +9,14 @@ interface CalendarViewProps {
   bodyChecks: BodyCheckItem[];
   dailyStats: DailyStats[];
   onSelectDate: (date: string) => void;
-  onEditProfile: () => void;
-  onLogout: () => void;
-  onExport: () => void;
-  onViewStats: () => void;
 }
 
 const CalendarView: React.FC<CalendarViewProps> = ({ 
-  user, logs, workouts, bodyChecks, dailyStats, onSelectDate, onEditProfile, onLogout, onExport, onViewStats 
+  user, logs, workouts, bodyChecks, dailyStats, onSelectDate 
 }) => {
   const today = new Date();
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
-  const [showMenu, setShowMenu] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-
-  useEffect(() => {
-    // Check status on mount
-    setNotificationsEnabled(NotificationService.isEnabled());
-  }, [showMenu]); // Re-check when menu opens
 
   const days = getMonthDays(currentYear, currentMonth);
 
@@ -49,25 +36,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     } else {
       setCurrentMonth(currentMonth + 1);
     }
-  };
-
-  const handleToggleNotifications = async () => {
-    if (notificationsEnabled) {
-      // User wants to disable
-      NotificationService.setPreference(false);
-      setNotificationsEnabled(false);
-    } else {
-      // User wants to enable
-      const granted = await NotificationService.requestPermission();
-      if (granted) {
-        NotificationService.setPreference(true);
-        setNotificationsEnabled(true);
-        alert("Reminders enabled! You will be notified at 12:00 PM and 7:00 PM.");
-      } else {
-        alert("Permission denied. Please enable notifications in your browser settings.");
-      }
-    }
-    setShowMenu(false);
   };
 
   const getDayStats = (dateStr: string) => {
@@ -103,67 +71,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({
            </div>
         </div>
 
-        {/* User Avatar & Dropdown */}
-        <div className="relative">
-           <button 
-             onClick={() => setShowMenu(!showMenu)}
-             className="w-14 h-14 rounded-full bg-gray-200 border-2 border-emerald-100 flex items-center justify-center overflow-hidden focus:outline-none focus:ring-4 focus:ring-emerald-50 transition shadow-sm hover:shadow-md"
-           >
-             {user.avatar ? (
-               <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-             ) : (
-               <div className="text-2xl">👤</div>
-             )}
-           </button>
-
-           {/* Dropdown Menu */}
-           {showMenu && (
-             <>
-               <div className="fixed inset-0 z-10 cursor-default" onClick={() => setShowMenu(false)}></div>
-               <div className="absolute right-0 top-full mt-3 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-20 py-2 animate-fade-in overflow-hidden">
-                 <div className="px-4 py-2 border-b border-gray-50 mb-1">
-                    <p className="text-xs font-bold text-gray-400 uppercase">Menu</p>
-                 </div>
-                 
-                 <button 
-                   onClick={() => { setShowMenu(false); onViewStats(); }}
-                   className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition"
-                 >
-                   <span>📈</span> Trends & Analytics
-                 </button>
-                 
-                 <button 
-                   onClick={() => { setShowMenu(false); onEditProfile(); }}
-                   className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition"
-                 >
-                   <span>✏️</span> Edit Profile
-                 </button>
-
-                 <button 
-                   onClick={handleToggleNotifications}
-                   className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition"
-                 >
-                   <span>{notificationsEnabled ? '🔕' : '🔔'}</span> 
-                   {notificationsEnabled ? 'Disable Reminders' : 'Enable Reminders'}
-                 </button>
-                 
-                 <button 
-                   onClick={() => { setShowMenu(false); onExport(); }}
-                   className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition"
-                 >
-                   <span>💾</span> Backup Data
-                 </button>
-                 
-                 <div className="border-t border-gray-100 my-1"></div>
-                 
-                 <button 
-                   onClick={() => { setShowMenu(false); onLogout(); }}
-                   className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition font-medium"
-                 >
-                   <span>🚪</span> Logout
-                 </button>
-               </div>
-             </>
+        {/* User Avatar (Static) */}
+        <div className="w-14 h-14 rounded-full bg-gray-200 border-2 border-emerald-100 flex items-center justify-center overflow-hidden">
+           {user.avatar ? (
+             <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+           ) : (
+             <div className="text-2xl">👤</div>
            )}
         </div>
       </div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { StorageService } from './services/storageService';
 import { NotificationService } from './services/notificationService';
@@ -25,6 +24,10 @@ const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<'calendar' | 'day' | 'stats'>('calendar');
   const [selectedDate, setSelectedDate] = useState<string>(getTodayDateString());
   
+  // UI States
+  const [showMenu, setShowMenu] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
   // Modal States
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isAddingFood, setIsAddingFood] = useState(false);
@@ -45,6 +48,13 @@ const App: React.FC = () => {
 
     return () => clearInterval(notificationInterval);
   }, []);
+
+  // Check notification status when menu opens
+  useEffect(() => {
+    if (showMenu) {
+      setNotificationsEnabled(NotificationService.isEnabled());
+    }
+  }, [showMenu]);
 
   const loadAllData = async () => {
     setLoading(true);
@@ -93,6 +103,7 @@ const App: React.FC = () => {
     setWorkouts([]);
     setBodyChecks([]);
     setDailyStats([]);
+    setShowMenu(false);
   };
 
   // --- Actions ---
@@ -157,6 +168,26 @@ const App: React.FC = () => {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    setShowMenu(false);
+  };
+
+  const handleToggleNotifications = async () => {
+    if (notificationsEnabled) {
+      // User wants to disable
+      NotificationService.setPreference(false);
+      setNotificationsEnabled(false);
+    } else {
+      // User wants to enable
+      const granted = await NotificationService.requestPermission();
+      if (granted) {
+        NotificationService.setPreference(true);
+        setNotificationsEnabled(true);
+        alert("Reminders enabled! You will be notified at 12:00 PM and 7:00 PM.");
+      } else {
+        alert("Permission denied. Please enable notifications in your browser settings.");
+      }
+    }
+    // Don't close menu immediately so they can see the toggle switch state
   };
 
   const handleDateSelect = (date: string) => {
@@ -308,6 +339,7 @@ const App: React.FC = () => {
           onCancel={() => {
             if (isEditingProfile) setIsEditingProfile(false);
             else setIsCreatingNewUser(false);
+            setShowMenu(false);
           }}
         />
       </div>
@@ -359,10 +391,6 @@ const App: React.FC = () => {
             bodyChecks={bodyChecks}
             dailyStats={dailyStats}
             onSelectDate={handleDateSelect}
-            onEditProfile={() => setIsEditingProfile(true)}
-            onLogout={logoutUser}
-            onExport={handleExportData}
-            onViewStats={() => setViewMode('stats')}
           />
         );
     }
@@ -377,11 +405,66 @@ const App: React.FC = () => {
             <span className="font-bold text-gray-800 tracking-tight">NutriTrack</span>
           </div>
           {currentUser && (
-             <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden cursor-pointer" onClick={() => setViewMode('calendar')}>
-                {currentUser.avatar ? (
-                   <img src={currentUser.avatar} alt="Me" className="w-full h-full object-cover" />
-                ) : (
-                   <div className="w-full h-full flex items-center justify-center">👤</div>
+             <div className="relative">
+                <button 
+                   onClick={() => setShowMenu(!showMenu)}
+                   className="w-10 h-10 rounded-full bg-gray-200 border border-gray-200 overflow-hidden focus:outline-none focus:ring-2 focus:ring-emerald-500 transition shadow-sm hover:shadow-md"
+                >
+                   {currentUser.avatar ? (
+                      <img src={currentUser.avatar} alt="Me" className="w-full h-full object-cover" />
+                   ) : (
+                      <div className="w-full h-full flex items-center justify-center text-lg">👤</div>
+                   )}
+                </button>
+
+                {/* Dropdown Menu */}
+                {showMenu && (
+                  <>
+                    <div className="fixed inset-0 z-10 cursor-default" onClick={() => setShowMenu(false)}></div>
+                    <div className="absolute right-0 top-full mt-3 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-20 py-2 animate-fade-in overflow-hidden">
+                      <div className="px-4 py-2 border-b border-gray-50 mb-1">
+                          <p className="text-xs font-bold text-gray-400 uppercase">Menu</p>
+                      </div>
+                      
+                      <button 
+                        onClick={() => { setShowMenu(false); setViewMode('stats'); }}
+                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition"
+                      >
+                        <span>📈</span> Trends & Analytics
+                      </button>
+                      
+                      <button 
+                        onClick={() => { setShowMenu(false); setIsEditingProfile(true); }}
+                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition"
+                      >
+                        <span>✏️</span> Edit Profile
+                      </button>
+
+                      <button 
+                        onClick={handleToggleNotifications}
+                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition"
+                      >
+                        <span>{notificationsEnabled ? '🔕' : '🔔'}</span> 
+                        {notificationsEnabled ? 'Disable Reminders' : 'Enable Reminders'}
+                      </button>
+                      
+                      <button 
+                        onClick={handleExportData}
+                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition"
+                      >
+                        <span>💾</span> Backup Data
+                      </button>
+                      
+                      <div className="border-t border-gray-100 my-1"></div>
+                      
+                      <button 
+                        onClick={logoutUser}
+                        className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition font-medium"
+                      >
+                        <span>🚪</span> Logout
+                      </button>
+                    </div>
+                  </>
                 )}
              </div>
           )}
