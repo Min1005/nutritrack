@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { StorageService } from './services/storageService';
+import { NotificationService } from './services/notificationService';
 import { UserProfile, FoodLogItem, MacroNutrients, WorkoutLogItem, BodyCheckItem, IngredientItem, DailyStats } from './types';
 import { generateId, getTodayDateString, calculateBMR, calculateTDEE, calculateTargetCalories } from './utils/calculations';
 import ProfileForm from './components/ProfileForm';
@@ -33,6 +34,16 @@ const App: React.FC = () => {
   // Initial Load
   useEffect(() => {
     loadAllData();
+
+    // Start Notification Scheduler (Check every minute)
+    const notificationInterval = setInterval(() => {
+      NotificationService.checkAndTriggerReminders();
+    }, 60000); // 60 seconds
+
+    // Immediate check on load
+    NotificationService.checkAndTriggerReminders();
+
+    return () => clearInterval(notificationInterval);
   }, []);
 
   const loadAllData = async () => {

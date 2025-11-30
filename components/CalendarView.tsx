@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { getMonthDays, getMonthName } from '../utils/dateUtils';
 import { FoodLogItem, WorkoutLogItem, BodyCheckItem, UserProfile, DailyStats } from '../types';
+import { NotificationService } from '../services/notificationService';
 
 interface CalendarViewProps {
   user: UserProfile;
@@ -42,6 +43,16 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     } else {
       setCurrentMonth(currentMonth + 1);
     }
+  };
+
+  const handleEnableNotifications = async () => {
+    const granted = await NotificationService.requestPermission();
+    if (granted) {
+      alert("Reminders enabled! You will be notified at 12:00 PM and 7:00 PM.");
+    } else {
+      alert("Permission denied. Please enable notifications in your browser settings.");
+    }
+    setShowMenu(false);
   };
 
   const getDayStats = (dateStr: string) => {
@@ -111,6 +122,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                    className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition"
                  >
                    <span>✏️</span> Edit Profile
+                 </button>
+
+                 <button 
+                   onClick={handleEnableNotifications}
+                   className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition"
+                 >
+                   <span>🔔</span> Enable Reminders
                  </button>
                  
                  <button 
