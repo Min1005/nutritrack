@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { analyzeFoodWithGemini, analyzeSingleIngredient, hasApiKey } from '../services/geminiService';
 import { MacroNutrients, SavedFoodItem, FoodLogItem, IngredientItem } from '../types';
@@ -280,9 +279,9 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 backdrop-blur-sm transition-opacity">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[90vh] transition-colors">
         {/* Header */}
-        <div className="bg-emerald-600 p-4 flex justify-between items-center shrink-0">
+        <div className="bg-emerald-600 dark:bg-emerald-700 p-4 flex justify-between items-center shrink-0">
           <h2 className="text-white font-bold text-lg">{initialLog ? 'Edit Log' : 'Log Food'}</h2>
           <button onClick={onCancel} className="text-white hover:text-emerald-100 p-1 rounded-full hover:bg-emerald-700 transition">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -291,15 +290,15 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
 
         {/* Mode Toggle (Hidden if editing) */}
         {!initialLog && (
-          <div className="flex border-b shrink-0">
+          <div className="flex border-b dark:border-gray-700 shrink-0">
             <button 
-              className={`flex-1 py-3 text-sm font-medium transition-colors ${mode === 'ai' ? 'text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50' : 'text-gray-500 hover:text-gray-700 hover:text-gray-700 hover:bg-gray-50'}`}
+              className={`flex-1 py-3 text-sm font-medium transition-colors ${mode === 'ai' ? 'text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50 dark:bg-emerald-900/20' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
               onClick={() => setMode('ai')}
             >
               ✨ Search / AI
             </button>
             <button 
-              className={`flex-1 py-3 text-sm font-medium transition-colors ${mode === 'manual' ? 'text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+              className={`flex-1 py-3 text-sm font-medium transition-colors ${mode === 'manual' ? 'text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50 dark:bg-emerald-900/20' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
               onClick={() => setMode('manual')}
             >
               ✏️ Manual Entry
@@ -325,13 +324,13 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
                    {!selectedImage ? (
                      <button 
                        onClick={() => fileInputRef.current?.click()}
-                       className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:bg-gray-200 hover:text-emerald-600 transition"
+                       className="flex-shrink-0 w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-emerald-600 transition"
                      >
                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                      </button>
                    ) : (
                      <div className="relative w-20 h-20 shrink-0">
-                       <img src={selectedImage} alt="Preview" className="w-full h-full object-cover rounded-lg border" />
+                       <img src={selectedImage} alt="Preview" className="w-full h-full object-cover rounded-lg border dark:border-gray-600" />
                        <button 
                          onClick={clearImage}
                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600"
@@ -350,7 +349,7 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
                           setIngredients([]);
                         }}
                         placeholder={selectedImage ? "Describe food (Optional)..." : "e.g. 雞胸肉"}
-                        className="w-full border border-gray-300 rounded-lg pl-4 pr-12 py-3 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-sm text-lg"
+                        className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg pl-4 pr-12 py-3 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-sm text-lg"
                         onKeyDown={(e) => e.key === 'Enter' && handleAiAnalyze()}
                         autoFocus={!selectedImage}
                       />
@@ -372,49 +371,49 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
               {/* Suggestions */}
               {input && filteredFoods.length > 0 && ingredients.length === 0 && !selectedImage && !initialLog && (
                 <div className="space-y-2 animate-fade-in">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Suggestions</p>
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Suggestions</p>
                   {filteredFoods.map(food => (
                     <button
                       key={food.id}
                       onClick={() => handleSelectSavedFood(food)}
-                      className="w-full text-left p-3 border rounded-lg hover:border-emerald-500 hover:bg-emerald-50 transition flex justify-between items-center bg-white shadow-sm"
+                      className="w-full text-left p-3 border dark:border-gray-700 rounded-lg hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition flex justify-between items-center bg-white dark:bg-gray-700 shadow-sm"
                     >
-                      <span className="font-medium text-gray-800">{food.name}</span>
-                      <span className="text-sm text-gray-500">{food.calories} kcal</span>
+                      <span className="font-medium text-gray-800 dark:text-gray-200">{food.name}</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{food.calories} kcal</span>
                     </button>
                   ))}
                 </div>
               )}
 
-              {error && <p className="text-red-500 text-sm text-center bg-red-50 p-2 rounded">{error}</p>}
+              {error && <p className="text-red-500 text-sm text-center bg-red-50 dark:bg-red-900/20 p-2 rounded">{error}</p>}
 
               {/* Ingredient Editor */}
               {ingredients.length > 0 && (
-                <div className="bg-emerald-50 rounded-xl border border-emerald-100 animate-fade-in shadow-sm overflow-hidden">
-                  <div className="p-4 bg-emerald-100 border-b border-emerald-200 flex justify-between items-center">
+                <div className="bg-emerald-50 dark:bg-emerald-900/10 rounded-xl border border-emerald-100 dark:border-emerald-800 animate-fade-in shadow-sm overflow-hidden">
+                  <div className="p-4 bg-emerald-100 dark:bg-emerald-900/40 border-b border-emerald-200 dark:border-emerald-800 flex justify-between items-center">
                      <div className="w-2/3">
-                        <span className="text-xs font-bold text-emerald-600 uppercase tracking-wide">Meal Name</span>
+                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">Meal Name</span>
                         <input 
                            value={overallName} 
                            onChange={e => setOverallName(e.target.value)}
-                           className="block w-full bg-transparent font-bold text-lg text-gray-800 focus:outline-none border-b border-dashed border-emerald-400 focus:border-emerald-600"
+                           className="block w-full bg-transparent font-bold text-lg text-gray-800 dark:text-gray-100 focus:outline-none border-b border-dashed border-emerald-400 focus:border-emerald-600"
                         />
                      </div>
                      <div className="text-right">
-                       <p className="text-xs text-emerald-700 font-semibold">TOTAL</p>
-                       <p className="font-bold text-lg text-emerald-800">{Math.round(totals.calories)} <span className="text-xs">kcal</span></p>
+                       <p className="text-xs text-emerald-700 dark:text-emerald-300 font-semibold">TOTAL</p>
+                       <p className="font-bold text-lg text-emerald-800 dark:text-emerald-200">{Math.round(totals.calories)} <span className="text-xs">kcal</span></p>
                      </div>
                   </div>
                   
                   {initialLog && selectedImage && (
-                    <div className="bg-emerald-50 px-4 pt-2">
-                       <img src={selectedImage} alt="Food" className="w-16 h-16 rounded object-cover border border-emerald-200" />
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 px-4 pt-2">
+                       <img src={selectedImage} alt="Food" className="w-16 h-16 rounded object-cover border border-emerald-200 dark:border-emerald-800" />
                     </div>
                   )}
 
-                  <div className="divide-y divide-emerald-100 max-h-60 overflow-y-auto">
+                  <div className="divide-y divide-emerald-100 dark:divide-emerald-800/50 max-h-60 overflow-y-auto">
                      {ingredients.map((item, index) => (
-                       <div key={item.id} className="p-3 bg-white hover:bg-gray-50 transition">
+                       <div key={item.id} className="p-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                          <div className="flex gap-2 mb-2">
                             <input 
                               value={item.name}
@@ -422,26 +421,26 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
                                 const newVal = e.target.value;
                                 setIngredients(prev => prev.map(p => p.id === item.id ? {...p, name: newVal} : p));
                               }}
-                              className="flex-grow border border-gray-200 rounded px-2 py-1 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-							  placeholder="New Item (e.g. 滷蛋)"
+                              className="flex-grow border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded px-2 py-1 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                              placeholder="New Item (e.g. 滷蛋)"
                             />
                             <button 
                               onClick={() => handleRecalculateRow(item.id, item.name)}
                               disabled={item.isLoading}
-                              className="bg-blue-50 text-blue-600 hover:bg-blue-100 p-1.5 rounded"
+                              className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 p-1.5 rounded"
                               title="Recalculate Macros from Name"
                             >
                               {item.isLoading ? <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div> : '🔄'}
                             </button>
                             <button 
                               onClick={() => handleDeleteRow(item.id)}
-                              className="bg-red-50 text-red-500 hover:bg-red-100 p-1.5 rounded"
+                              className="bg-red-50 dark:bg-red-900/30 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 p-1.5 rounded"
                               title="Delete Item"
                             >
                               ×
                             </button>
                          </div>
-                         <div className="flex justify-between text-xs text-gray-500 px-1">
+                         <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 px-1">
                             <span>Cal: {Math.round(item.calories)}</span>
                             <span>P: {item.protein.toFixed(2)}g</span>
                             <span>C: {item.carbs.toFixed(2)}g</span>
@@ -451,10 +450,10 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
                      ))}
                   </div>
 
-                  <div className="p-3 bg-emerald-50 border-t border-emerald-100 flex gap-2">
+                  <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 border-t border-emerald-100 dark:border-emerald-800 flex gap-2">
                      <button 
                        onClick={handleAddRow}
-                       className="flex-1 py-2 bg-white border border-emerald-200 text-emerald-700 text-sm rounded-lg hover:bg-emerald-100 transition"
+                       className="flex-1 py-2 bg-white dark:bg-gray-800 border border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 text-sm rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition"
                      >
                        + Add Item
                      </button>
@@ -485,7 +484,7 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
                  <button 
                    type="button"
                    onClick={() => fileInputRef.current?.click()}
-                   className="w-full py-3 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-600 transition flex items-center justify-center gap-2"
+                   className="w-full py-3 bg-gray-50 dark:bg-gray-700 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition flex items-center justify-center gap-2"
                  >
                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                    {selectedImage ? 'Change Photo' : 'Add Photo (Optional)'}
@@ -506,50 +505,50 @@ const FoodLogger: React.FC<FoodLoggerProps> = ({ userId, initialLog, onAdd, onUp
                )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Food Name (食物名稱)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Food Name (食物名稱)</label>
                 <input 
                   required
                   value={manualName}
                   onChange={e => setManualName(e.target.value)}
                   placeholder="e.g. 滷肉飯"
-                  className="block w-full rounded-lg border-gray-300 shadow-sm border p-2 focus:ring-emerald-500 focus:border-emerald-500" 
+                  className="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm border p-2 focus:ring-emerald-500 focus:border-emerald-500" 
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Calories</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Calories</label>
                     <input 
                       type="number" required
                       value={manualCals}
                       onChange={e => setManualCals(e.target.value)}
-                      className="block w-full rounded-lg border-gray-300 shadow-sm border p-2 focus:ring-emerald-500 focus:border-emerald-500" 
+                      className="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm border p-2 focus:ring-emerald-500 focus:border-emerald-500" 
                     />
                  </div>
                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Protein (g)</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Protein (g)</label>
                     <input 
                       type="number" required
                       value={manualProt}
                       onChange={e => setManualProt(e.target.value)}
-                      className="block w-full rounded-lg border-gray-300 shadow-sm border p-2 focus:ring-emerald-500 focus:border-emerald-500" 
+                      className="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm border p-2 focus:ring-emerald-500 focus:border-emerald-500" 
                     />
                  </div>
                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Carbs (g)</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Carbs (g)</label>
                     <input 
                       type="number" required
                       value={manualCarbs}
                       onChange={e => setManualCarbs(e.target.value)}
-                      className="block w-full rounded-lg border-gray-300 shadow-sm border p-2 focus:ring-emerald-500 focus:border-emerald-500" 
+                      className="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm border p-2 focus:ring-emerald-500 focus:border-emerald-500" 
                     />
                  </div>
                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Fat (g)</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fat (g)</label>
                     <input 
                       type="number" required
                       value={manualFat}
                       onChange={e => setManualFat(e.target.value)}
-                      className="block w-full rounded-lg border-gray-300 shadow-sm border p-2 focus:ring-emerald-500 focus:border-emerald-500" 
+                      className="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm border p-2 focus:ring-emerald-500 focus:border-emerald-500" 
                     />
                  </div>
               </div>

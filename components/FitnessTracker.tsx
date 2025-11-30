@@ -130,9 +130,9 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
     <div className="space-y-6">
       
       {/* Workout Section */}
-      <div className="bg-white rounded-xl shadow-md p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 transition-colors">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+          <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
             <span>💪</span> Workouts
           </h3>
           <button 
@@ -144,14 +144,14 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
         </div>
 
         {/* Add Workout Form */}
-        <form onSubmit={handleAddWorkout} className="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100 relative">
+        <form onSubmit={handleAddWorkout} className="mb-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800 relative">
            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
              <div className="md:col-span-2 relative" ref={dropdownRef}>
-               <label className="block text-xs font-semibold text-gray-500 mb-1">Exercise (動作) <span className="text-red-500">*</span></label>
+               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Exercise (動作) <span className="text-red-500">*</span></label>
                <input 
                  type="text" 
                  placeholder="e.g. Bench Press"
-                 className="w-full border rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                 className="w-full border rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                  value={exercise}
                  onChange={handleExerciseChange}
                  onFocus={() => { if (exercise) setShowSuggestions(true); }}
@@ -161,13 +161,13 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
                
                {/* Autocomplete Dropdown */}
                {showSuggestions && filteredExercises.length > 0 && (
-                 <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
+                 <div className="absolute z-10 w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
                    {filteredExercises.map((ex, idx) => (
                      <button
                        key={idx}
                        type="button"
                        onClick={() => selectExercise(ex)}
-                       className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 text-gray-700 hover:text-blue-700 transition border-b last:border-0 border-gray-50"
+                       className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 hover:text-blue-700 transition border-b last:border-0 border-gray-50 dark:border-gray-600"
                      >
                        {ex}
                      </button>
@@ -178,11 +178,11 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
              
              <div className="grid grid-cols-3 gap-3 md:col-span-2">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1">Sets (組數) <span className="text-red-500">*</span></label>
+                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Sets (組數) <span className="text-red-500">*</span></label>
                   <input 
                     type="number" 
                     placeholder="4"
-                    className="w-full border rounded-lg p-2 text-sm"
+                    className="w-full border rounded-lg p-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     value={sets}
                     onChange={e => setSets(e.target.value)}
                     required
@@ -190,11 +190,11 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1">Reps (次數) <span className="text-red-500">*</span></label>
+                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Reps (次數) <span className="text-red-500">*</span></label>
                   <input 
                     type="number" 
                     placeholder="10"
-                    className="w-full border rounded-lg p-2 text-sm"
+                    className="w-full border rounded-lg p-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     value={reps}
                     onChange={e => setReps(e.target.value)}
                     required
@@ -202,11 +202,11 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1">Weight (kg) <span className="text-red-500">*</span></label>
+                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Weight (kg) <span className="text-red-500">*</span></label>
                   <input 
                     type="number" 
                     placeholder="60"
-                    className="w-full border rounded-lg p-2 text-sm"
+                    className="w-full border rounded-lg p-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     value={weight}
                     onChange={e => setWeight(e.target.value)}
                     required
@@ -219,7 +219,7 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
            
            <div className="flex justify-between items-center mt-2">
               <select 
-                className="border rounded-lg p-2 text-xs bg-white text-gray-600"
+                className="border rounded-lg p-2 text-xs bg-white text-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
                 value={selectedTag}
                 onChange={e => setSelectedTag(e.target.value)}
               >
@@ -231,7 +231,7 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
                 className={`px-6 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all ${
                   isFormValid 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                 }`}
               >
                 Add Log
@@ -246,7 +246,7 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b">
+                <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
                   <tr>
                     <th className="px-3 py-2">Exercise</th>
                     <th className="px-3 py-2 text-center">Sets</th>
@@ -255,21 +255,21 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
                     <th className="px-3 py-2"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {workouts.map(w => (
-                    <tr key={w.id} className="bg-white hover:bg-gray-50">
-                      <td className="px-3 py-3 font-medium text-gray-900">
+                    <tr key={w.id} className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-3 py-3 font-medium text-gray-900 dark:text-gray-200">
                         {w.exercise || (w as any).name} 
                         {/* Fallback for legacy data */}
                         <div className="text-xs text-gray-400 font-normal">
                           {w.tags.join(', ')}
                         </div>
                       </td>
-                      <td className="px-3 py-3 text-center text-gray-600">{w.sets || '-'}</td>
-                      <td className="px-3 py-3 text-center text-gray-600">{w.reps || '-'}</td>
-                      <td className="px-3 py-3 text-center text-gray-600">{w.weight ? `${w.weight}kg` : '-'}</td>
+                      <td className="px-3 py-3 text-center text-gray-600 dark:text-gray-400">{w.sets || '-'}</td>
+                      <td className="px-3 py-3 text-center text-gray-600 dark:text-gray-400">{w.reps || '-'}</td>
+                      <td className="px-3 py-3 text-center text-gray-600 dark:text-gray-400">{w.weight ? `${w.weight}kg` : '-'}</td>
                       <td className="px-3 py-3 text-right">
-                        <button onClick={() => onDeleteWorkout(w.id)} className="text-red-400 hover:text-red-600 px-2 font-bold">
+                        <button onClick={() => onDeleteWorkout(w.id)} className="text-red-400 hover:text-red-600 dark:hover:text-red-300 px-2 font-bold">
                           ×
                         </button>
                       </td>
@@ -283,9 +283,9 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
       </div>
 
       {/* Body Check Section */}
-      <div className="bg-white rounded-xl shadow-md p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 transition-colors">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+          <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
             <span>📸</span> Body Check
           </h3>
           <input 
@@ -306,12 +306,12 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
 
         <div className="grid grid-cols-2 gap-4">
            {bodyChecks.length === 0 ? (
-             <div className="col-span-2 text-center text-gray-400 text-sm py-8 border-2 border-dashed border-gray-200 rounded-lg">
+             <div className="col-span-2 text-center text-gray-400 text-sm py-8 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
                Upload a photo to track your physique.
              </div>
            ) : (
              bodyChecks.map(check => (
-               <div key={check.id} className="relative group rounded-lg overflow-hidden border border-gray-200 aspect-[3/4] bg-gray-100">
+               <div key={check.id} className="relative group rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 aspect-[3/4] bg-gray-100 dark:bg-gray-900">
                  <img src={check.image} alt="Body Check" className="w-full h-full object-cover" />
                  <button 
                    onClick={() => onDeleteBodyCheck(check.id)}

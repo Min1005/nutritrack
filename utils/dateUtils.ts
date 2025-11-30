@@ -1,21 +1,23 @@
 
 export const getMonthDays = (year: number, month: number) => {
   const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const daysInMonth = lastDay.getDate();
-  const startingDayOfWeek = firstDay.getDay(); // 0 = Sunday
+  const startOffset = firstDay.getDay(); // 0 = Sunday
+  
+  // Calculate the start date of the grid (previous Sunday)
+  const startDate = new Date(firstDay);
+  startDate.setDate(firstDay.getDate() - startOffset);
 
   const days = [];
 
-  // Padding for previous month
-  for (let i = 0; i < startingDayOfWeek; i++) {
-    days.push(null);
-  }
-
-  // Days of current month
-  for (let i = 1; i <= daysInMonth; i++) {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-    days.push(dateStr);
+  // Generate 42 days (6 weeks) to fill the calendar grid consistently
+  for (let i = 0; i < 42; i++) {
+    const current = new Date(startDate);
+    current.setDate(startDate.getDate() + i);
+    
+    const dateStr = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
+    const isCurrentMonth = current.getMonth() === month;
+    
+    days.push({ date: dateStr, isCurrentMonth });
   }
 
   return days;

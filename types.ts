@@ -18,6 +18,8 @@ export enum Goal {
   Bulk = 'bulk',       // Muscle Gain
 }
 
+export type ThemeColor = 'emerald' | 'blue' | 'rose' | 'violet' | 'orange';
+
 export interface UserProfile {
   id: string;
   name: string;

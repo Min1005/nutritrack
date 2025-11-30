@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StorageService } from './services/storageService';
 import { NotificationService } from './services/notificationService';
-import { UserProfile, FoodLogItem, MacroNutrients, WorkoutLogItem, BodyCheckItem, IngredientItem, DailyStats } from './types';
+import { UserProfile, FoodLogItem, MacroNutrients, WorkoutLogItem, BodyCheckItem, IngredientItem, DailyStats, ThemeColor } from './types';
 import { generateId, getTodayDateString, calculateBMR, calculateTDEE, calculateTargetCalories } from './utils/calculations';
 import ProfileForm from './components/ProfileForm';
 import Dashboard from './components/Dashboard'; 
@@ -9,11 +9,18 @@ import CalendarView from './components/CalendarView';
 import FoodLogger from './components/FoodLogger';
 import StatisticsView from './components/StatisticsView';
 
+const THEME_KEY = 'nutritrack_theme';
+const DARK_MODE_KEY = 'nutritrack_dark_mode';
+
 const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [users, setUsers] = useState<UserProfile[]>([]);
   
+  // App Settings
+  const [theme, setTheme] = useState<ThemeColor>('emerald');
+  const [darkMode, setDarkMode] = useState(false);
+
   // Data States
   const [logs, setLogs] = useState<FoodLogItem[]>([]);
   const [workouts, setWorkouts] = useState<WorkoutLogItem[]>([]);
@@ -37,6 +44,26 @@ const App: React.FC = () => {
   // Initial Load
   useEffect(() => {
     loadAllData();
+
+    // Load Theme
+    const savedTheme = localStorage.getItem(THEME_KEY) as ThemeColor;
+    if (savedTheme) setTheme(savedTheme);
+
+    // Load Dark Mode
+    const savedDarkMode = localStorage.getItem(DARK_MODE_KEY);
+    if (savedDarkMode === 'true') {
+      setDarkMode(true);
+      document.documentElement.classList.add('dark');
+    } else if (savedDarkMode === 'false') {
+      setDarkMode(false);
+      document.documentElement.classList.remove('dark');
+    } else {
+       // System preference default
+       if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          setDarkMode(true);
+          document.documentElement.classList.add('dark');
+       }
+    }
 
     // Start Notification Scheduler (Check every minute)
     const notificationInterval = setInterval(() => {
@@ -107,6 +134,22 @@ const App: React.FC = () => {
   };
 
   // --- Actions ---
+
+  const handleToggleDarkMode = () => {
+    const newMode = !darkMode;
+    setDarkMode(newMode);
+    localStorage.setItem(DARK_MODE_KEY, String(newMode));
+    if (newMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
+  const handleSaveTheme = (newTheme: ThemeColor) => {
+    setTheme(newTheme);
+    localStorage.setItem(THEME_KEY, newTheme);
+  };
 
   const handleSaveProfile = async (profile: UserProfile) => {
     setLoading(true);
@@ -264,10 +307,10 @@ const App: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
         <div className="flex flex-col items-center">
-           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4"></div>
-           <p className="text-gray-500 font-medium">Initializing Database...</p>
+           <div className={`animate-spin rounded-full h-12 w-12 border-b-2 border-${theme}-600 mb-4`}></div>
+           <p className="text-gray-500 dark:text-gray-400 font-medium">Initializing Database...</p>
         </div>
       </div>
     );
@@ -276,14 +319,14 @@ const App: React.FC = () => {
   // 1. Auth / Login Screen
   if (!currentUser && !isCreatingNewUser) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-md transition-colors">
           <div className="text-center mb-8">
-            <div className="bg-emerald-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className={`bg-${theme}-100 dark:bg-${theme}-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4`}>
               <span className="text-3xl">🥗</span>
             </div>
-            <h1 className="text-3xl font-bold text-gray-800">NutriTrack AI</h1>
-            <p className="text-gray-500 mt-2">Track Food • Workouts • Progress</p>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-white">NutriTrack AI</h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">Track Food • Workouts • Progress</p>
           </div>
 
           {users.length > 0 && (
@@ -294,19 +337,19 @@ const App: React.FC = () => {
                   <button 
                     key={user.id}
                     onClick={() => loginUser(user)}
-                    className="w-full text-left px-4 py-3 border rounded-xl hover:border-emerald-500 hover:bg-emerald-50 transition flex items-center justify-between group"
+                    className={`w-full text-left px-4 py-3 border rounded-xl dark:border-gray-700 hover:border-${theme}-500 hover:bg-${theme}-50 dark:hover:bg-${theme}-900/20 transition flex items-center justify-between group`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
+                      <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex-shrink-0 overflow-hidden">
                         {user.avatar ? (
                           <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-lg">👤</div>
+                          <div className="w-full h-full flex items-center justify-center text-lg text-gray-400">👤</div>
                         )}
                       </div>
-                      <span className="font-medium text-gray-700 group-hover:text-emerald-700">{user.name}</span>
+                      <span className={`font-medium text-gray-700 dark:text-gray-200 group-hover:text-${theme}-700 dark:group-hover:text-${theme}-400`}>{user.name}</span>
                     </div>
-                    <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">{user.goal.toUpperCase()}</span>
+                    <span className={`text-xs text-${theme}-600 dark:text-${theme}-400 bg-${theme}-50 dark:bg-${theme}-900/40 px-2 py-1 rounded-full`}>{user.goal.toUpperCase()}</span>
                   </button>
                 ))}
               </div>
@@ -315,12 +358,12 @@ const App: React.FC = () => {
           
           <button 
             onClick={() => setIsCreatingNewUser(true)}
-            className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700 transition shadow-lg shadow-emerald-200"
+            className={`w-full bg-${theme}-600 text-white font-bold py-3 rounded-xl hover:bg-${theme}-700 transition shadow-lg shadow-${theme}-200 dark:shadow-none`}
           >
             Create New Profile
           </button>
           
-          <div className="mt-8 text-center text-xs text-gray-400">
+          <div className="mt-8 text-center text-xs text-gray-400 dark:text-gray-500">
              <p>Data stored locally (IndexedDB).</p>
              <p>Backup regularly using the export feature.</p>
           </div>
@@ -332,7 +375,7 @@ const App: React.FC = () => {
   // 2. Profile Screen
   if (isCreatingNewUser || isEditingProfile) {
     return (
-      <div className="min-h-screen bg-gray-100 py-12 px-4">
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 py-12 px-4">
         <ProfileForm 
           initialData={isEditingProfile ? currentUser : null}
           onSave={handleSaveProfile}
@@ -367,6 +410,7 @@ const App: React.FC = () => {
             workouts={workouts}
             bodyChecks={bodyChecks}
             dailyStats={dailyStats.find(s => s.date === selectedDate)}
+            theme={theme}
             onUpdateDailyStats={handleUpdateDailyStats}
             onBack={() => setViewMode('calendar')}
             onDeleteLog={handleDeleteLog}
@@ -390,6 +434,8 @@ const App: React.FC = () => {
             workouts={workouts}
             bodyChecks={bodyChecks}
             dailyStats={dailyStats}
+            selectedDate={selectedDate}
+            theme={theme}
             onSelectDate={handleDateSelect}
           />
         );
@@ -397,23 +443,23 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <nav className="bg-white shadow-sm sticky top-0 z-30">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 transition-colors duration-300">
+      <nav className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-30 transition-colors duration-300">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => setViewMode('calendar')}>
             <span className="text-2xl">🥗</span>
-            <span className="font-bold text-gray-800 tracking-tight">NutriTrack</span>
+            <span className="font-bold text-gray-800 dark:text-white tracking-tight">NutriTrack</span>
           </div>
           {currentUser && (
              <div className="relative">
                 <button 
                    onClick={() => setShowMenu(!showMenu)}
-                   className="w-10 h-10 rounded-full bg-gray-200 border border-gray-200 overflow-hidden focus:outline-none focus:ring-2 focus:ring-emerald-500 transition shadow-sm hover:shadow-md"
+                   className={`w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 overflow-hidden focus:outline-none focus:ring-2 focus:ring-${theme}-500 transition shadow-sm hover:shadow-md`}
                 >
                    {currentUser.avatar ? (
                       <img src={currentUser.avatar} alt="Me" className="w-full h-full object-cover" />
                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-lg">👤</div>
+                      <div className="w-full h-full flex items-center justify-center text-lg text-gray-500 dark:text-gray-400">👤</div>
                    )}
                 </button>
 
@@ -421,28 +467,61 @@ const App: React.FC = () => {
                 {showMenu && (
                   <>
                     <div className="fixed inset-0 z-10 cursor-default" onClick={() => setShowMenu(false)}></div>
-                    <div className="absolute right-0 top-full mt-3 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-20 py-2 animate-fade-in overflow-hidden">
-                      <div className="px-4 py-2 border-b border-gray-50 mb-1">
+                    <div className="absolute right-0 top-full mt-3 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-20 py-2 animate-fade-in overflow-hidden transition-colors">
+                      <div className="px-4 py-2 border-b border-gray-50 dark:border-gray-700 mb-1">
                           <p className="text-xs font-bold text-gray-400 uppercase">Menu</p>
                       </div>
+
+                      {/* Dark Mode Toggle */}
+                      <button 
+                        onClick={handleToggleDarkMode}
+                        className={`w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-${theme}-50 dark:hover:bg-gray-700 hover:text-${theme}-700 flex items-center justify-between gap-3 transition`}
+                      >
+                         <div className="flex items-center gap-3">
+                           <span>{darkMode ? '🌙' : '☀️'}</span>
+                           <span>Dark Mode</span>
+                         </div>
+                         <div className={`w-10 h-5 rounded-full relative transition-colors ${darkMode ? `bg-${theme}-600` : 'bg-gray-300'}`}>
+                            <div className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-all ${darkMode ? 'left-6' : 'left-1'}`}></div>
+                         </div>
+                      </button>
+                      
+                      {/* Theme Picker */}
+                      <div className="px-4 py-3">
+                         <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">Theme Color</p>
+                         <div className="flex gap-2 justify-between">
+                            {(['emerald', 'blue', 'violet', 'rose', 'orange'] as ThemeColor[]).map((c) => (
+                              <button
+                                key={c}
+                                onClick={() => handleSaveTheme(c)}
+                                className={`w-8 h-8 rounded-full border-2 transition ${theme === c ? 'border-gray-600 dark:border-gray-300 scale-110' : 'border-transparent hover:scale-105'}`}
+                                style={{ backgroundColor: `var(--color-${c}-500)` }}
+                              >
+                                <div className={`w-full h-full rounded-full bg-${c}-500`}></div>
+                              </button>
+                            ))}
+                         </div>
+                      </div>
+
+                      <div className="border-t border-gray-50 dark:border-gray-700 my-1"></div>
                       
                       <button 
                         onClick={() => { setShowMenu(false); setViewMode('stats'); }}
-                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition"
+                        className={`w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-${theme}-50 dark:hover:bg-gray-700 hover:text-${theme}-700 flex items-center gap-3 transition`}
                       >
                         <span>📈</span> Trends & Analytics
                       </button>
                       
                       <button 
                         onClick={() => { setShowMenu(false); setIsEditingProfile(true); }}
-                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition"
+                        className={`w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-${theme}-50 dark:hover:bg-gray-700 hover:text-${theme}-700 flex items-center gap-3 transition`}
                       >
                         <span>✏️</span> Edit Profile
                       </button>
 
                       <button 
                         onClick={handleToggleNotifications}
-                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition"
+                        className={`w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-${theme}-50 dark:hover:bg-gray-700 hover:text-${theme}-700 flex items-center gap-3 transition`}
                       >
                         <span>{notificationsEnabled ? '🔕' : '🔔'}</span> 
                         {notificationsEnabled ? 'Disable Reminders' : 'Enable Reminders'}
@@ -450,16 +529,16 @@ const App: React.FC = () => {
                       
                       <button 
                         onClick={handleExportData}
-                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition"
+                        className={`w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-${theme}-50 dark:hover:bg-gray-700 hover:text-${theme}-700 flex items-center gap-3 transition`}
                       >
                         <span>💾</span> Backup Data
                       </button>
                       
-                      <div className="border-t border-gray-100 my-1"></div>
+                      <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
                       
                       <button 
                         onClick={logoutUser}
-                        className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition font-medium"
+                        className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition font-medium"
                       >
                         <span>🚪</span> Logout
                       </button>

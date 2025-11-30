@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { UserProfile, Gender, ActivityLevel, Goal } from '../types';
 import { calculateBMR, calculateTDEE, calculateTargetCalories, generateId } from '../utils/calculations';
@@ -84,8 +83,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSave, onCancel
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-md max-w-lg mx-auto">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">{initialData ? 'Edit Profile' : 'Create New Profile'}</h2>
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md max-w-lg mx-auto transition-colors">
+      <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">{initialData ? 'Edit Profile' : 'Create New Profile'}</h2>
       
       <form onSubmit={handleSubmit} className="space-y-4">
         
@@ -100,7 +99,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSave, onCancel
            />
            <div 
              onClick={() => fileInputRef.current?.click()}
-             className="w-24 h-24 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 overflow-hidden transition relative group"
+             className="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-700 border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 overflow-hidden transition relative group"
            >
              {avatar ? (
                <img src={avatar} alt="Profile" className="w-full h-full object-cover" />
@@ -112,39 +111,39 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSave, onCancel
              )}
              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition" />
            </div>
-           <p className="text-xs text-gray-500 mt-2">Click to set profile photo</p>
+           <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Click to set profile photo</p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Name</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
           <input 
             type="text" 
             required
             value={name} 
             onChange={e => setName(e.target.value)} 
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 border p-2"
+            className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500 border p-2"
             placeholder="e.g. John Doe"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Age</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Age</label>
             <input 
               type="number" 
               required
               step="1"
               value={age} 
               onChange={e => setAge(e.target.value)} 
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 border p-2"
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500 border p-2"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Gender</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Gender</label>
             <select 
               value={gender} 
               onChange={e => setGender(e.target.value as Gender)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 border p-2"
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500 border p-2"
             >
               <option value={Gender.Male}>Male</option>
               <option value={Gender.Female}>Female</option>
@@ -154,7 +153,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSave, onCancel
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Height (cm)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Height (cm)</label>
             <input 
               type="number" 
               required
@@ -162,11 +161,11 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSave, onCancel
               value={height} 
               onChange={e => setHeight(e.target.value)} 
               placeholder="175.5"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 border p-2"
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500 border p-2"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Weight (kg)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Weight (kg)</label>
             <input 
               type="number" 
               required
@@ -174,17 +173,17 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSave, onCancel
               value={weight} 
               onChange={e => setWeight(e.target.value)} 
               placeholder="70.2"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 border p-2"
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500 border p-2"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Activity Level</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Activity Level</label>
           <select 
             value={activityLevel} 
             onChange={e => setActivityLevel(e.target.value as ActivityLevel)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 border p-2"
+            className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500 border p-2"
           >
             <option value={ActivityLevel.Sedentary}>Sedentary (Office job, little exercise)</option>
             <option value={ActivityLevel.Light}>Lightly Active (1-3 days/week)</option>
@@ -195,11 +194,11 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSave, onCancel
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Goal</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Goal</label>
           <select 
             value={goal} 
             onChange={e => setGoal(e.target.value as Goal)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 border p-2 bg-emerald-50 text-emerald-900 font-medium"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 border p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-900 dark:text-emerald-100 font-medium"
           >
             <option value={Goal.Cut}>Lose Weight (Deficit ~400kcal)</option>
             <option value={Goal.Maintain}>Maintain Weight</option>
@@ -208,14 +207,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSave, onCancel
         </div>
 
         {/* Live TDEE Preview */}
-        <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-100 mt-4 space-y-2">
-          <div className="flex justify-between items-center border-b border-emerald-200 pb-2">
-             <span className="text-sm text-emerald-800">Maintenance Calories (TDEE)</span>
-             <span className="font-bold text-emerald-700">{calculatedTDEE > 0 ? calculatedTDEE : '---'}</span>
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-lg border border-emerald-100 dark:border-emerald-800 mt-4 space-y-2 transition-colors">
+          <div className="flex justify-between items-center border-b border-emerald-200 dark:border-emerald-800 pb-2">
+             <span className="text-sm text-emerald-800 dark:text-emerald-200">Maintenance Calories (TDEE)</span>
+             <span className="font-bold text-emerald-700 dark:text-emerald-300">{calculatedTDEE > 0 ? calculatedTDEE : '---'}</span>
           </div>
           <div className="flex justify-between items-center pt-1">
-             <span className="text-sm text-emerald-800 font-bold">Daily Target ({goal === Goal.Cut ? 'Cut' : goal === Goal.Bulk ? 'Bulk' : 'Maintain'})</span>
-             <span className="font-bold text-2xl text-emerald-700">{calculatedTarget > 0 ? calculatedTarget : '---'} <span className="text-xs">kcal</span></span>
+             <span className="text-sm text-emerald-800 dark:text-emerald-200 font-bold">Daily Target ({goal === Goal.Cut ? 'Cut' : goal === Goal.Bulk ? 'Bulk' : 'Maintain'})</span>
+             <span className="font-bold text-2xl text-emerald-700 dark:text-emerald-300">{calculatedTarget > 0 ? calculatedTarget : '---'} <span className="text-xs">kcal</span></span>
           </div>
         </div>
 
@@ -224,14 +223,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData, onSave, onCancel
              <button 
                type="button" 
                onClick={onCancel}
-               className="flex-1 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
+               className="flex-1 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
              >
                Cancel
              </button>
            )}
           <button 
             type="submit" 
-            className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+            className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition"
           >
             {initialData ? 'Update Profile' : 'Create Profile'}
           </button>

@@ -58,8 +58,8 @@ const WorkoutAdvisor: React.FC<WorkoutAdvisorProps> = ({ onAddExercise, onClose 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 backdrop-blur-sm transition-opacity">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden transition-colors">
         
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 shrink-0 flex justify-between items-center">
@@ -73,17 +73,17 @@ const WorkoutAdvisor: React.FC<WorkoutAdvisorProps> = ({ onAddExercise, onClose 
         </div>
 
         {/* Controls */}
-        <div className="p-4 border-b shrink-0 bg-gray-50">
+        <div className="p-4 border-b dark:border-gray-700 shrink-0 bg-gray-50 dark:bg-gray-900/50 transition-colors">
           <div className="flex gap-2 mb-4">
              <button 
                onClick={() => setMode('quick')}
-               className={`flex-1 py-2 text-sm font-bold rounded-lg transition ${mode === 'quick' ? 'bg-white text-blue-600 shadow-sm border' : 'text-gray-500 hover:bg-gray-200'}`}
+               className={`flex-1 py-2 text-sm font-bold rounded-lg transition ${mode === 'quick' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border dark:border-gray-600' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
              >
                Quick Select
              </button>
              <button 
                onClick={() => setMode('chat')}
-               className={`flex-1 py-2 text-sm font-bold rounded-lg transition ${mode === 'chat' ? 'bg-white text-blue-600 shadow-sm border' : 'text-gray-500 hover:bg-gray-200'}`}
+               className={`flex-1 py-2 text-sm font-bold rounded-lg transition ${mode === 'chat' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border dark:border-gray-600' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
              >
                Chat Request
              </button>
@@ -92,7 +92,7 @@ const WorkoutAdvisor: React.FC<WorkoutAdvisorProps> = ({ onAddExercise, onClose 
           {mode === 'quick' ? (
             <div className="flex gap-2">
                <select 
-                 className="flex-1 p-2 border rounded-lg text-sm"
+                 className="flex-1 p-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                  value={selectedPart.name}
                  onChange={(e) => {
                     const part = BODY_PARTS.find(p => p.name === e.target.value)!;
@@ -103,7 +103,7 @@ const WorkoutAdvisor: React.FC<WorkoutAdvisorProps> = ({ onAddExercise, onClose 
                  {BODY_PARTS.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
                </select>
                <select 
-                 className="flex-1 p-2 border rounded-lg text-sm"
+                 className="flex-1 p-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                  value={selectedFocus}
                  onChange={(e) => setSelectedFocus(e.target.value)}
                >
@@ -112,7 +112,7 @@ const WorkoutAdvisor: React.FC<WorkoutAdvisorProps> = ({ onAddExercise, onClose 
             </div>
           ) : (
             <input 
-              className="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               placeholder="e.g. I have 20 mins and only dumbbells, want to train arms."
               value={customInput}
               onChange={(e) => setCustomInput(e.target.value)}
@@ -129,42 +129,42 @@ const WorkoutAdvisor: React.FC<WorkoutAdvisorProps> = ({ onAddExercise, onClose 
         </div>
 
         {/* Results */}
-        <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+        <div className="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-gray-900/50">
           {plan ? (
             <div className="space-y-4 animate-fade-in">
-              <div className="bg-white p-4 rounded-lg shadow-sm border border-blue-100">
-                 <h3 className="font-bold text-lg text-blue-800">{plan.planName}</h3>
-                 <p className="text-sm text-gray-600 mt-1">{plan.advice}</p>
+              <div className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-blue-100 dark:border-blue-900/30">
+                 <h3 className="font-bold text-lg text-blue-800 dark:text-blue-200">{plan.planName}</h3>
+                 <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{plan.advice}</p>
               </div>
 
               <div className="space-y-3">
                  {plan.exercises.map((ex, idx) => (
-                   <div key={idx} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:border-blue-300 transition group">
+                   <div key={idx} className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-100 dark:border-gray-600 hover:border-blue-300 transition group">
                       <div className="flex justify-between items-start">
                          <div>
-                            <h4 className="font-bold text-gray-800">{ex.name}</h4>
-                            <div className="flex gap-3 text-sm text-gray-600 mt-1">
-                               <span className="bg-gray-100 px-2 py-0.5 rounded">Sets: {ex.sets}</span>
-                               <span className="bg-gray-100 px-2 py-0.5 rounded">Reps: {ex.reps}</span>
+                            <h4 className="font-bold text-gray-800 dark:text-white">{ex.name}</h4>
+                            <div className="flex gap-3 text-sm text-gray-600 dark:text-gray-300 mt-1">
+                               <span className="bg-gray-100 dark:bg-gray-600 px-2 py-0.5 rounded">Sets: {ex.sets}</span>
+                               <span className="bg-gray-100 dark:bg-gray-600 px-2 py-0.5 rounded">Reps: {ex.reps}</span>
                             </div>
-                            <p className="text-xs text-gray-400 mt-2 italic">{ex.tips}</p>
+                            <p className="text-xs text-gray-400 dark:text-gray-400 mt-2 italic">{ex.tips}</p>
                          </div>
                          <button 
                            onClick={() => onAddExercise(ex.name, ex.sets, parseInt(ex.reps) || 10)}
-                           className="bg-blue-50 text-blue-600 p-2 rounded-full hover:bg-blue-100 transition shrink-0"
+                           className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50 transition shrink-0"
                            title="Add to Log"
                          >
                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                          </button>
                       </div>
                       
-                      <div className="mt-3 pt-3 border-t flex items-center gap-1">
+                      <div className="mt-3 pt-3 border-t dark:border-gray-600 flex items-center gap-1">
                          <span className="text-xs text-red-500">📺</span>
                          <a 
                            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(ex.youtubeQuery)}`}
                            target="_blank"
                            rel="noreferrer"
-                           className="text-xs text-blue-500 hover:underline font-medium"
+                           className="text-xs text-blue-500 dark:text-blue-300 hover:underline font-medium"
                          >
                            Watch Tutorial
                          </a>
@@ -175,7 +175,7 @@ const WorkoutAdvisor: React.FC<WorkoutAdvisorProps> = ({ onAddExercise, onClose 
             </div>
           ) : (
             !loading && (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+              <div className="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-500">
                 <span className="text-4xl mb-2">🏋️</span>
                 <p>Select options or describe your goal to get a plan.</p>
               </div>
