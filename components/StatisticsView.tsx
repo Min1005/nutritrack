@@ -1,20 +1,24 @@
+
 import React, { useState, useMemo } from 'react';
 import { 
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart
 } from 'recharts';
-import { UserProfile, FoodLogItem, DailyStats } from '../types';
+import { UserProfile, FoodLogItem, DailyStats, ThemeColor } from '../types';
+import { THEMES } from '../utils/theme';
 
 interface StatisticsViewProps {
   user: UserProfile;
   logs: FoodLogItem[];
   dailyStats: DailyStats[];
+  theme: ThemeColor;
   onBack: () => void;
 }
 
 type TimeRange = '7' | '30' | '90';
 
-const StatisticsView: React.FC<StatisticsViewProps> = ({ user, logs, dailyStats, onBack }) => {
+const StatisticsView: React.FC<StatisticsViewProps> = ({ user, logs, dailyStats, theme, onBack }) => {
   const [range, setRange] = useState<TimeRange>('30');
+  const themeConfig = THEMES[theme];
 
   const data = useMemo(() => {
     const days = parseInt(range);
@@ -74,7 +78,7 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({ user, logs, dailyStats,
              <button
                key={r}
                onClick={() => setRange(r)}
-               className={`px-3 py-1 text-xs font-bold rounded-md transition ${range === r ? 'bg-white dark:bg-gray-600 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+               className={`px-3 py-1 text-xs font-bold rounded-md transition ${range === r ? 'bg-white dark:bg-gray-600 shadow-sm ' + themeConfig.text : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
              >
                {r} Days
              </button>
@@ -89,9 +93,9 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({ user, logs, dailyStats,
             <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{averageCals}</p>
             <p className="text-xs text-gray-400 dark:text-gray-500">Target: {user.targetCalories}</p>
          </div>
-         <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-blue-50 dark:border-blue-900/30 transition-colors">
+         <div className={`bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-50 dark:border-gray-700 transition-colors`}>
             <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Latest Weight</p>
-            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{recordedWeights.length > 0 ? recordedWeights[recordedWeights.length - 1] : user.weight} <span className="text-sm">kg</span></p>
+            <p className={`text-2xl font-bold ${themeConfig.text}`}>{recordedWeights.length > 0 ? recordedWeights[recordedWeights.length - 1] : user.weight} <span className="text-sm">kg</span></p>
          </div>
          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-purple-50 dark:border-purple-900/30 transition-colors">
             <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Weight Change</p>
@@ -137,9 +141,9 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({ user, logs, dailyStats,
                <Line 
                  type="monotone" 
                  dataKey="weight" 
-                 stroke="#4F46E5" 
+                 stroke={themeConfig.hex} 
                  strokeWidth={3} 
-                 dot={{r: 4, strokeWidth: 2, fill: '#4F46E5'}} 
+                 dot={{r: 4, strokeWidth: 2, fill: themeConfig.hex}} 
                  activeDot={{r: 6}}
                  connectNulls 
                />

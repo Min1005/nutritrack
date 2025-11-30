@@ -1,14 +1,17 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import { WorkoutLogItem, BodyCheckItem } from '../types';
+import { WorkoutLogItem, BodyCheckItem, ThemeColor } from '../types';
 import { generateId } from '../utils/calculations';
 import { compressImage } from '../utils/imageUtils';
 import { commonExercises } from '../utils/exerciseData';
 import WorkoutAdvisor from './WorkoutAdvisor';
+import { THEMES } from '../utils/theme';
 
 interface FitnessTrackerProps {
   date: string;
   workouts: WorkoutLogItem[];
   bodyChecks: BodyCheckItem[];
+  theme: ThemeColor;
   onAddWorkout: (item: WorkoutLogItem) => void;
   onDeleteWorkout: (id: string) => void;
   onAddBodyCheck: (item: BodyCheckItem) => void;
@@ -16,7 +19,7 @@ interface FitnessTrackerProps {
 }
 
 const FitnessTracker: React.FC<FitnessTrackerProps> = ({ 
-  date, workouts, bodyChecks, onAddWorkout, onDeleteWorkout, onAddBodyCheck, onDeleteBodyCheck 
+  date, workouts, bodyChecks, theme, onAddWorkout, onDeleteWorkout, onAddBodyCheck, onDeleteBodyCheck 
 }) => {
   // Form State
   const [exercise, setExercise] = useState('');
@@ -37,6 +40,8 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const tags = ['Gym', 'Cardio', 'Home', 'Chest', 'Back', 'Legs', 'Arms', 'Abs', 'Yoga'];
+
+  const themeConfig = THEMES[theme];
 
   // Handle outside click to close dropdown
   useEffect(() => {
@@ -137,21 +142,21 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
           </h3>
           <button 
             onClick={() => setShowAdvisor(true)}
-            className="text-sm bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1.5 rounded-lg hover:shadow-lg transition flex items-center gap-1 font-bold"
+            className={`text-sm ${themeConfig.gradient} text-white px-3 py-1.5 rounded-lg hover:shadow-lg transition flex items-center gap-1 font-bold`}
           >
             <span>✨</span> AI Coach
           </button>
         </div>
 
         {/* Add Workout Form */}
-        <form onSubmit={handleAddWorkout} className="mb-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800 relative">
+        <form onSubmit={handleAddWorkout} className={`mb-6 ${themeConfig.lightBg} p-4 rounded-lg border ${themeConfig.border} relative transition-colors`}>
            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
              <div className="md:col-span-2 relative" ref={dropdownRef}>
                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Exercise (動作) <span className="text-red-500">*</span></label>
                <input 
                  type="text" 
                  placeholder="e.g. Bench Press"
-                 className="w-full border rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                 className={`w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 ${themeConfig.ring} focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all`}
                  value={exercise}
                  onChange={handleExerciseChange}
                  onFocus={() => { if (exercise) setShowSuggestions(true); }}
@@ -167,7 +172,7 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
                        key={idx}
                        type="button"
                        onClick={() => selectExercise(ex)}
-                       className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 hover:text-blue-700 transition border-b last:border-0 border-gray-50 dark:border-gray-600"
+                       className={`w-full text-left px-3 py-2 text-sm hover:${themeConfig.lightBg} text-gray-700 dark:text-gray-200 hover:${themeConfig.text} transition border-b last:border-0 border-gray-50 dark:border-gray-600`}
                      >
                        {ex}
                      </button>
@@ -182,7 +187,7 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
                   <input 
                     type="number" 
                     placeholder="4"
-                    className="w-full border rounded-lg p-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    className={`w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 ${themeConfig.ring} focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all`}
                     value={sets}
                     onChange={e => setSets(e.target.value)}
                     required
@@ -194,7 +199,7 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
                   <input 
                     type="number" 
                     placeholder="10"
-                    className="w-full border rounded-lg p-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    className={`w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 ${themeConfig.ring} focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all`}
                     value={reps}
                     onChange={e => setReps(e.target.value)}
                     required
@@ -206,7 +211,7 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
                   <input 
                     type="number" 
                     placeholder="60"
-                    className="w-full border rounded-lg p-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    className={`w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 ${themeConfig.ring} focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all`}
                     value={weight}
                     onChange={e => setWeight(e.target.value)}
                     required
@@ -230,7 +235,7 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
                 disabled={!isFormValid}
                 className={`px-6 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all ${
                   isFormValid 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    ? `${themeConfig.gradient} text-white hover:opacity-90` 
                     : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                 }`}
               >
@@ -298,7 +303,7 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
           <button 
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="text-sm bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+            className={`text-sm ${themeConfig.gradient} text-white px-3 py-1.5 rounded-lg hover:opacity-90 disabled:opacity-50`}
           >
             {isUploading ? 'Uploading...' : '+ Add Photo'}
           </button>

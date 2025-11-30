@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import { getMonthDays, getMonthName } from '../utils/dateUtils';
 import { FoodLogItem, WorkoutLogItem, BodyCheckItem, UserProfile, DailyStats, ThemeColor } from '../types';
+import { THEMES } from '../utils/theme';
 
 interface CalendarViewProps {
   user: UserProfile;
@@ -59,49 +61,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     };
   };
 
-  // Helper for Theme Colors (Including Dark Mode variants via Tailwind classes)
-  const getThemeColors = () => {
-    switch(theme) {
-      case 'blue': return { 
-        text: 'text-blue-700 dark:text-blue-400', 
-        bg: 'bg-blue-50 dark:bg-blue-900/30', 
-        shadow: 'shadow-blue-100 dark:shadow-none', 
-        dot: 'bg-blue-400', 
-        badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' 
-      };
-      case 'rose': return { 
-        text: 'text-rose-700 dark:text-rose-400', 
-        bg: 'bg-rose-50 dark:bg-rose-900/30', 
-        shadow: 'shadow-rose-100 dark:shadow-none', 
-        dot: 'bg-rose-400', 
-        badge: 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300' 
-      };
-      case 'violet': return { 
-        text: 'text-violet-700 dark:text-violet-400', 
-        bg: 'bg-violet-50 dark:bg-violet-900/30', 
-        shadow: 'shadow-violet-100 dark:shadow-none', 
-        dot: 'bg-violet-400', 
-        badge: 'bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300' 
-      };
-      case 'orange': return { 
-        text: 'text-orange-700 dark:text-orange-400', 
-        bg: 'bg-orange-50 dark:bg-orange-900/30', 
-        shadow: 'shadow-orange-100 dark:shadow-none', 
-        dot: 'bg-orange-400', 
-        badge: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300' 
-      };
-      case 'emerald': 
-      default: return { 
-        text: 'text-emerald-700 dark:text-emerald-400', 
-        bg: 'bg-emerald-50 dark:bg-emerald-900/30', 
-        shadow: 'shadow-emerald-100 dark:shadow-none', 
-        dot: 'bg-emerald-400', 
-        badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' 
-      };
-    }
-  };
-
-  const themeColors = getThemeColors();
+  const themeConfig = THEMES[theme];
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
@@ -111,14 +71,14 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         <div>
            <h1 className="text-2xl font-bold text-gray-800 dark:text-white tracking-tight">Hi, {user.name}</h1>
            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mt-1">
-              <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${themeColors.badge}`}>{user.goal}</span>
+              <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${themeConfig.lightBg} ${themeConfig.text}`}>{user.goal}</span>
               <span>•</span>
               <span>Target: <span className="font-semibold text-gray-700 dark:text-gray-300">{user.targetCalories} kcal</span></span>
            </div>
         </div>
 
         {/* User Avatar (Static) */}
-        <div className={`w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-700 border-2 flex items-center justify-center overflow-hidden ${theme === 'emerald' ? 'border-emerald-50 dark:border-emerald-900' : `border-${theme}-50 dark:border-${theme}-900`}`}>
+        <div className={`w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-700 border-2 flex items-center justify-center overflow-hidden border-gray-100 dark:border-gray-600`}>
            {user.avatar ? (
              <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
            ) : (
@@ -160,7 +120,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
              const stats = getDayStats(dateStr);
 
              // Dynamic Theme Classes for Selected State
-             const selectedStyle = `${themeColors.bg} ${themeColors.text} shadow-lg ${themeColors.shadow} scale-105 z-10 font-bold border-transparent`;
+             const selectedStyle = `${themeConfig.activeClass} scale-105 z-10 font-bold border-transparent`;
              
              // Muted style for adjacent months
              const normalStyle = isCurrentMonth 
@@ -181,17 +141,17 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                  {/* Indicators */}
                  <div className="flex gap-1 mt-1.5 flex-wrap justify-center px-1">
                     {/* Workout: Blue usually, or Theme color if selected? Let's keep distinct colors for types. */}
-                    {stats.hasWorkout && <div className={`w-1 h-1 rounded-full ${isSelected ? themeColors.dot : 'bg-blue-400'}`} title="Workout"></div>}
+                    {stats.hasWorkout && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white/80' : 'bg-blue-400'}`} title="Workout"></div>}
                     
                     {/* Body Check: Indigo/Camera */}
-                    {stats.hasPhoto && <div className={`w-1 h-1 rounded-full ${isSelected ? themeColors.dot : 'bg-indigo-400'}`} title="Body Check"></div>}
+                    {stats.hasPhoto && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white/80' : 'bg-indigo-400'}`} title="Body Check"></div>}
                     
                     {/* Stats/Note: Purple */}
-                    {(stats.hasWeight || stats.hasNote) && <div className={`w-1 h-1 rounded-full ${isSelected ? themeColors.dot : 'bg-purple-400'}`} title="Weight/Note"></div>}
+                    {(stats.hasWeight || stats.hasNote) && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white/80' : 'bg-purple-400'}`} title="Weight/Note"></div>}
                  </div>
 
                  {stats.calories > 0 && (
-                   <div className={`mt-auto mb-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${stats.isGoalMet ? 'text-emerald-700 bg-emerald-100/50 dark:bg-emerald-900/50 dark:text-emerald-300' : 'text-gray-400 bg-gray-100 dark:bg-gray-700 dark:text-gray-400'}`}>
+                   <div className={`mt-auto mb-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : stats.isGoalMet ? 'text-emerald-700 bg-emerald-100/50 dark:bg-emerald-900/50 dark:text-emerald-300' : 'text-gray-400 bg-gray-100 dark:bg-gray-700 dark:text-gray-400'}`}>
                      {stats.calories}
                    </div>
                  )}

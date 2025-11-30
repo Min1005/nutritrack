@@ -1,8 +1,10 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { UserProfile, FoodLogItem, WorkoutLogItem, BodyCheckItem, DailyStats, ThemeColor } from '../types';
 import { formatDateReadable } from '../utils/calculations';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import FitnessTracker from './FitnessTracker';
+import { THEMES } from '../utils/theme';
 
 interface DayDetailProps {
   user: UserProfile;
@@ -81,11 +83,7 @@ const Dashboard: React.FC<DayDetailProps> = ({
   const todaysWorkouts = useMemo(() => workouts.filter(w => w.date === date), [workouts, date]);
   const todaysBodyChecks = useMemo(() => bodyChecks.filter(b => b.date === date), [bodyChecks, date]);
 
-  // Theme Helpers
-  const getThemeColorClass = (type: 'text' | 'bg' | 'border') => {
-    return `${type}-${theme}-600`;
-  };
-  const getThemeLightClass = () => `bg-${theme}-50 dark:bg-${theme}-900/30`;
+  const themeConfig = THEMES[theme];
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
@@ -101,7 +99,7 @@ const Dashboard: React.FC<DayDetailProps> = ({
         </div>
         <button 
           onClick={() => setIsStatsExpanded(!isStatsExpanded)}
-          className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition ${dailyStats?.weight || dailyStats?.note ? `${getThemeLightClass()} ${getThemeColorClass('text')} dark:text-${theme}-400` : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300'}`}
+          className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition ${dailyStats?.weight || dailyStats?.note ? `${themeConfig.lightBg} ${themeConfig.text}` : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300'}`}
         >
           {dailyStats?.weight ? `${dailyStats.weight}kg` : 'Record Stats'} ✏️
         </button>
@@ -109,14 +107,14 @@ const Dashboard: React.FC<DayDetailProps> = ({
 
       {/* Daily Stats Section (Collapsible) */}
       {isStatsExpanded && (
-        <div className={`bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md border animate-fade-in border-${theme}-100 dark:border-gray-700 transition-colors`}>
+        <div className={`bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md border animate-fade-in border-gray-100 dark:border-gray-700 transition-colors`}>
           <h3 className="font-bold text-gray-800 dark:text-white mb-3 text-sm">Daily Progress & Notes</h3>
           <div className="grid grid-cols-2 gap-4 mb-3">
              <div>
                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Weight (kg)</label>
                <input 
                  type="number" step="0.1" placeholder="e.g. 70.5"
-                 className={`w-full border rounded-lg p-2 text-sm focus:ring-${theme}-500 focus:border-${theme}-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white`}
+                 className={`w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-gray-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white`}
                  value={weight}
                  onChange={e => setWeight(e.target.value)}
                />
@@ -125,7 +123,7 @@ const Dashboard: React.FC<DayDetailProps> = ({
                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Body Fat (%)</label>
                <input 
                  type="number" step="0.1" placeholder="e.g. 15.5"
-                 className={`w-full border rounded-lg p-2 text-sm focus:ring-${theme}-500 focus:border-${theme}-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white`}
+                 className={`w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-gray-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white`}
                  value={bodyFat}
                  onChange={e => setBodyFat(e.target.value)}
                />
@@ -135,7 +133,7 @@ const Dashboard: React.FC<DayDetailProps> = ({
              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Journal / Notes</label>
              <textarea 
                rows={3}
-               className={`w-full border rounded-lg p-2 text-sm focus:ring-${theme}-500 focus:border-${theme}-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white`}
+               className={`w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-gray-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white`}
                placeholder="How did you feel today? Any cheat meals? Good workout?"
                value={note}
                onChange={e => setNote(e.target.value)}
@@ -143,7 +141,7 @@ const Dashboard: React.FC<DayDetailProps> = ({
           </div>
           <button 
             onClick={handleStatsSave}
-            className={`w-full text-white py-2 rounded-lg font-bold hover:opacity-90 transition bg-${theme}-600`}
+            className={`w-full text-white py-2 rounded-lg font-bold hover:opacity-90 transition ${themeConfig.gradient} shadow-sm`}
           >
             Save Daily Stats
           </button>
@@ -154,13 +152,13 @@ const Dashboard: React.FC<DayDetailProps> = ({
       <div className="flex bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden border border-gray-100 dark:border-gray-700 transition-colors">
         <button 
           onClick={() => setActiveTab('nutrition')}
-          className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 ${activeTab === 'nutrition' ? `bg-${theme}-50 dark:bg-${theme}-900/30 text-${theme}-600 dark:text-${theme}-400 border-b-2 border-${theme}-500` : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+          className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 ${activeTab === 'nutrition' ? `${themeConfig.lightBg} ${themeConfig.text} border-b-2 border-current` : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
         >
           <span>🥗</span> Nutrition
         </button>
         <button 
            onClick={() => setActiveTab('fitness')}
-           className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 ${activeTab === 'fitness' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-b-2 border-blue-500' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+           className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 ${activeTab === 'fitness' ? `${themeConfig.lightBg} ${themeConfig.text} border-b-2 border-current` : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
         >
           <span>💪</span> Fitness & Body
         </button>
@@ -179,12 +177,12 @@ const Dashboard: React.FC<DayDetailProps> = ({
                         </div>
                         <div className="text-right">
                             <span className="block text-sm text-gray-500 dark:text-gray-400">Remaining</span>
-                            <span className={`font-bold text-${theme}-600 dark:text-${theme}-400`}>{Math.round(remainingCalories)}</span>
+                            <span className={`font-bold ${themeConfig.text}`}>{Math.round(remainingCalories)}</span>
                         </div>
                     </div>
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
                         <div 
-                            className={`bg-gradient-to-r from-${theme}-400 to-${theme}-600 h-4 rounded-full transition-all duration-500 ease-in-out`} 
+                            className={`${themeConfig.gradient} h-4 rounded-full transition-all duration-500 ease-in-out`} 
                             style={{ width: `${progressPercent}%` }}
                         ></div>
                     </div>
@@ -230,7 +228,7 @@ const Dashboard: React.FC<DayDetailProps> = ({
              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden transition-colors">
                   <div className="p-4 bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700 flex justify-between items-center">
                       <h3 className="font-bold text-gray-700 dark:text-gray-200">Food Log</h3>
-                      <button onClick={onAddFood} className={`bg-${theme}-600 hover:bg-${theme}-700 text-white text-sm px-4 py-2 rounded-lg shadow transition`}>
+                      <button onClick={onAddFood} className={`${themeConfig.gradient} text-white text-sm px-4 py-2 rounded-lg shadow hover:opacity-90 transition`}>
                         + Add Food
                       </button>
                   </div>
@@ -251,7 +249,7 @@ const Dashboard: React.FC<DayDetailProps> = ({
                                         <div className="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xl border border-gray-200 dark:border-gray-600">🍎</div>
                                       )}
                                       <div>
-                                          <p className={`font-semibold text-gray-800 dark:text-gray-200 group-hover:text-${theme}-600 dark:group-hover:text-${theme}-400 flex items-center gap-2`}>
+                                          <p className={`font-semibold text-gray-800 dark:text-gray-200 group-hover:${themeConfig.text} flex items-center gap-2`}>
                                             {log.name} 
                                             <span className="text-[10px] text-gray-400 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">EDIT</span>
                                           </p>
@@ -276,6 +274,7 @@ const Dashboard: React.FC<DayDetailProps> = ({
              date={date}
              workouts={todaysWorkouts}
              bodyChecks={todaysBodyChecks}
+             theme={theme}
              onAddWorkout={onAddWorkout}
              onDeleteWorkout={onDeleteWorkout}
              onAddBodyCheck={onAddBodyCheck}

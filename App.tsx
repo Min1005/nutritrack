@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { StorageService } from './services/storageService';
 import { NotificationService } from './services/notificationService';
 import { UserProfile, FoodLogItem, MacroNutrients, WorkoutLogItem, BodyCheckItem, IngredientItem, DailyStats, ThemeColor } from './types';
+import { THEMES } from './utils/theme';
 import { generateId, getTodayDateString, calculateBMR, calculateTDEE, calculateTargetCalories } from './utils/calculations';
 import ProfileForm from './components/ProfileForm';
 import Dashboard from './components/Dashboard'; 
@@ -47,7 +49,7 @@ const App: React.FC = () => {
 
     // Load Theme
     const savedTheme = localStorage.getItem(THEME_KEY) as ThemeColor;
-    if (savedTheme) setTheme(savedTheme);
+    if (savedTheme && THEMES[savedTheme]) setTheme(savedTheme);
 
     // Load Dark Mode
     const savedDarkMode = localStorage.getItem(DARK_MODE_KEY);
@@ -305,11 +307,13 @@ const App: React.FC = () => {
 
   // --- Renders ---
 
+  const currentTheme = THEMES[theme];
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
         <div className="flex flex-col items-center">
-           <div className={`animate-spin rounded-full h-12 w-12 border-b-2 border-${theme}-600 mb-4`}></div>
+           <div className={`animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4`}></div>
            <p className="text-gray-500 dark:text-gray-400 font-medium">Initializing Database...</p>
         </div>
       </div>
@@ -322,7 +326,7 @@ const App: React.FC = () => {
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4">
         <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-md transition-colors">
           <div className="text-center mb-8">
-            <div className={`bg-${theme}-100 dark:bg-${theme}-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4`}>
+            <div className={`bg-emerald-100 dark:bg-emerald-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4`}>
               <span className="text-3xl">🥗</span>
             </div>
             <h1 className="text-3xl font-bold text-gray-800 dark:text-white">NutriTrack AI</h1>
@@ -337,7 +341,7 @@ const App: React.FC = () => {
                   <button 
                     key={user.id}
                     onClick={() => loginUser(user)}
-                    className={`w-full text-left px-4 py-3 border rounded-xl dark:border-gray-700 hover:border-${theme}-500 hover:bg-${theme}-50 dark:hover:bg-${theme}-900/20 transition flex items-center justify-between group`}
+                    className={`w-full text-left px-4 py-3 border rounded-xl dark:border-gray-700 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition flex items-center justify-between group`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex-shrink-0 overflow-hidden">
@@ -347,9 +351,9 @@ const App: React.FC = () => {
                           <div className="w-full h-full flex items-center justify-center text-lg text-gray-400">👤</div>
                         )}
                       </div>
-                      <span className={`font-medium text-gray-700 dark:text-gray-200 group-hover:text-${theme}-700 dark:group-hover:text-${theme}-400`}>{user.name}</span>
+                      <span className={`font-medium text-gray-700 dark:text-gray-200 group-hover:text-emerald-700 dark:group-hover:text-emerald-400`}>{user.name}</span>
                     </div>
-                    <span className={`text-xs text-${theme}-600 dark:text-${theme}-400 bg-${theme}-50 dark:bg-${theme}-900/40 px-2 py-1 rounded-full`}>{user.goal.toUpperCase()}</span>
+                    <span className={`text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/40 px-2 py-1 rounded-full`}>{user.goal.toUpperCase()}</span>
                   </button>
                 ))}
               </div>
@@ -358,7 +362,7 @@ const App: React.FC = () => {
           
           <button 
             onClick={() => setIsCreatingNewUser(true)}
-            className={`w-full bg-${theme}-600 text-white font-bold py-3 rounded-xl hover:bg-${theme}-700 transition shadow-lg shadow-${theme}-200 dark:shadow-none`}
+            className={`w-full bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700 transition shadow-lg shadow-emerald-200 dark:shadow-none`}
           >
             Create New Profile
           </button>
@@ -399,6 +403,7 @@ const App: React.FC = () => {
             logs={logs}
             dailyStats={dailyStats}
             onBack={() => setViewMode('calendar')}
+            theme={theme}
           />
         );
       case 'day':
@@ -444,22 +449,22 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 transition-colors duration-300">
-      <nav className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-30 transition-colors duration-300">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+      <nav className={`${currentTheme.gradient} shadow-md sticky top-0 z-30 transition-all duration-300`}>
+        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center text-white">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => setViewMode('calendar')}>
-            <span className="text-2xl">🥗</span>
-            <span className="font-bold text-gray-800 dark:text-white tracking-tight">NutriTrack</span>
+            <span className="text-2xl drop-shadow-sm">🥗</span>
+            <span className="font-bold text-lg md:text-xl tracking-tight drop-shadow-sm">NutriTrack</span>
           </div>
           {currentUser && (
              <div className="relative">
                 <button 
                    onClick={() => setShowMenu(!showMenu)}
-                   className={`w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 overflow-hidden focus:outline-none focus:ring-2 focus:ring-${theme}-500 transition shadow-sm hover:shadow-md`}
+                   className="w-10 h-10 rounded-full bg-white/20 border-2 border-white/30 backdrop-blur-sm overflow-hidden focus:outline-none hover:bg-white/30 transition shadow-sm"
                 >
                    {currentUser.avatar ? (
                       <img src={currentUser.avatar} alt="Me" className="w-full h-full object-cover" />
                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-lg text-gray-500 dark:text-gray-400">👤</div>
+                      <div className="w-full h-full flex items-center justify-center text-lg text-white">👤</div>
                    )}
                 </button>
 
@@ -467,7 +472,7 @@ const App: React.FC = () => {
                 {showMenu && (
                   <>
                     <div className="fixed inset-0 z-10 cursor-default" onClick={() => setShowMenu(false)}></div>
-                    <div className="absolute right-0 top-full mt-3 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-20 py-2 animate-fade-in overflow-hidden transition-colors">
+                    <div className="absolute right-0 top-full mt-3 w-72 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-20 py-2 animate-fade-in overflow-hidden transition-colors">
                       <div className="px-4 py-2 border-b border-gray-50 dark:border-gray-700 mb-1">
                           <p className="text-xs font-bold text-gray-400 uppercase">Menu</p>
                       </div>
@@ -475,29 +480,29 @@ const App: React.FC = () => {
                       {/* Dark Mode Toggle */}
                       <button 
                         onClick={handleToggleDarkMode}
-                        className={`w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-${theme}-50 dark:hover:bg-gray-700 hover:text-${theme}-700 flex items-center justify-between gap-3 transition`}
+                        className={`w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:${currentTheme.lightBg} flex items-center justify-between gap-3 transition`}
                       >
                          <div className="flex items-center gap-3">
                            <span>{darkMode ? '🌙' : '☀️'}</span>
                            <span>Dark Mode</span>
                          </div>
-                         <div className={`w-10 h-5 rounded-full relative transition-colors ${darkMode ? `bg-${theme}-600` : 'bg-gray-300'}`}>
+                         <div className={`w-10 h-5 rounded-full relative transition-colors ${darkMode ? 'bg-indigo-500' : 'bg-gray-300'}`}>
                             <div className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-all ${darkMode ? 'left-6' : 'left-1'}`}></div>
                          </div>
                       </button>
                       
                       {/* Theme Picker */}
                       <div className="px-4 py-3">
-                         <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">Theme Color</p>
-                         <div className="flex gap-2 justify-between">
-                            {(['emerald', 'blue', 'violet', 'rose', 'orange'] as ThemeColor[]).map((c) => (
+                         <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">Theme Style</p>
+                         <div className="grid grid-cols-4 gap-2">
+                            {(Object.keys(THEMES) as ThemeColor[]).map((c) => (
                               <button
                                 key={c}
                                 onClick={() => handleSaveTheme(c)}
-                                className={`w-8 h-8 rounded-full border-2 transition ${theme === c ? 'border-gray-600 dark:border-gray-300 scale-110' : 'border-transparent hover:scale-105'}`}
-                                style={{ backgroundColor: `var(--color-${c}-500)` }}
+                                className={`w-full aspect-square rounded-full border-2 transition relative overflow-hidden ${theme === c ? 'border-gray-600 dark:border-gray-300 scale-105 shadow-md' : 'border-transparent hover:scale-105'}`}
+                                title={THEMES[c].name}
                               >
-                                <div className={`w-full h-full rounded-full bg-${c}-500`}></div>
+                                <div className={`absolute inset-0 ${THEMES[c].gradient}`}></div>
                               </button>
                             ))}
                          </div>
@@ -507,21 +512,21 @@ const App: React.FC = () => {
                       
                       <button 
                         onClick={() => { setShowMenu(false); setViewMode('stats'); }}
-                        className={`w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-${theme}-50 dark:hover:bg-gray-700 hover:text-${theme}-700 flex items-center gap-3 transition`}
+                        className={`w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:${currentTheme.lightBg} flex items-center gap-3 transition`}
                       >
                         <span>📈</span> Trends & Analytics
                       </button>
                       
                       <button 
                         onClick={() => { setShowMenu(false); setIsEditingProfile(true); }}
-                        className={`w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-${theme}-50 dark:hover:bg-gray-700 hover:text-${theme}-700 flex items-center gap-3 transition`}
+                        className={`w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:${currentTheme.lightBg} flex items-center gap-3 transition`}
                       >
                         <span>✏️</span> Edit Profile
                       </button>
 
                       <button 
                         onClick={handleToggleNotifications}
-                        className={`w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-${theme}-50 dark:hover:bg-gray-700 hover:text-${theme}-700 flex items-center gap-3 transition`}
+                        className={`w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:${currentTheme.lightBg} flex items-center gap-3 transition`}
                       >
                         <span>{notificationsEnabled ? '🔕' : '🔔'}</span> 
                         {notificationsEnabled ? 'Disable Reminders' : 'Enable Reminders'}
@@ -529,7 +534,7 @@ const App: React.FC = () => {
                       
                       <button 
                         onClick={handleExportData}
-                        className={`w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-${theme}-50 dark:hover:bg-gray-700 hover:text-${theme}-700 flex items-center gap-3 transition`}
+                        className={`w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:${currentTheme.lightBg} flex items-center gap-3 transition`}
                       >
                         <span>💾</span> Backup Data
                       </button>
