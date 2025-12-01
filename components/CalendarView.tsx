@@ -64,47 +64,47 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   const themeConfig = THEMES[theme];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
+    <div className="space-y-2 animate-fade-in">
       
       {/* Header Profile Card */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm flex items-center justify-between relative z-10 border border-gray-100 dark:border-gray-700 transition-colors">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm flex items-center justify-between relative z-10 border border-gray-100 dark:border-gray-700 transition-colors">
         <div>
-           <h1 className="text-2xl font-bold text-gray-800 dark:text-white tracking-tight">Hi, {user.name}</h1>
-           <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mt-1">
-              <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${themeConfig.lightBg} ${themeConfig.text}`}>{user.goal}</span>
+           <h1 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight">Hi, {user.name}</h1>
+           <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              <span className={`px-1.5 py-0.5 rounded font-bold uppercase ${themeConfig.lightBg} ${themeConfig.text}`}>{user.goal}</span>
               <span>•</span>
               <span>Target: <span className="font-semibold text-gray-700 dark:text-gray-300">{user.targetCalories} kcal</span></span>
            </div>
         </div>
 
         {/* User Avatar (Static) */}
-        <div className={`w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-700 border-2 flex items-center justify-center overflow-hidden border-gray-100 dark:border-gray-600`}>
+        <div className={`w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 border-2 flex items-center justify-center overflow-hidden border-gray-100 dark:border-gray-600`}>
            {user.avatar ? (
              <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
            ) : (
-             <div className="text-2xl">👤</div>
+             <div className="text-lg">👤</div>
            )}
         </div>
       </div>
 
       {/* Calendar Controls */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-md border border-gray-100 dark:border-gray-700 transition-colors">
-        <div className="flex justify-between items-center mb-6 px-2">
-           <button onClick={prevMonth} className="p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
-             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+        <div className="flex justify-between items-center mb-4 px-1">
+           <button onClick={prevMonth} className="p-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
            </button>
-           <h2 className="text-xl font-bold text-gray-800 dark:text-white">{getMonthName(currentMonth)} {currentYear}</h2>
-           <button onClick={nextMonth} className="p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
-             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+           <h2 className="text-lg font-bold text-gray-800 dark:text-white">{getMonthName(currentMonth)} {currentYear}</h2>
+           <button onClick={nextMonth} className="p-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
            </button>
         </div>
 
         {/* Days Header */}
-        <div className="grid grid-cols-7 text-center mb-4">
+        <div className="grid grid-cols-7 text-center mb-2">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
             <div 
               key={d} 
-              className={`text-xs font-medium uppercase tracking-wider ${i === 0 ? 'text-red-400 dark:text-red-400' : i === 6 ? 'text-blue-400 dark:text-blue-400' : 'text-gray-300 dark:text-gray-500'}`}
+              className={`text-[10px] font-bold uppercase tracking-wider ${i === 0 ? 'text-red-400 dark:text-red-400' : i === 6 ? 'text-blue-400 dark:text-blue-400' : 'text-gray-300 dark:text-gray-500'}`}
             >
               {d}
             </div>
@@ -112,7 +112,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         </div>
 
         {/* Days Grid */}
-        <div className="grid grid-cols-7 gap-3 md:gap-4">
+        <div className="grid grid-cols-7 gap-2">
            {days.map(({ date: dateStr, isCurrentMonth }, index) => {
              const date = new Date(dateStr);
              const isSelected = dateStr === selectedDate;
@@ -132,14 +132,14 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                  key={dateStr}
                  onClick={() => onSelectDate(dateStr)}
                  className={`
-                   relative aspect-square rounded-2xl flex flex-col items-center justify-start pt-2 transition-all duration-300 border
+                   relative aspect-square rounded-lg flex flex-col items-center justify-start pt-1.5 transition-all duration-300 border
                    ${isSelected ? selectedStyle : normalStyle}
                  `}
                >
-                 <span className="text-sm">{dayNum}</span>
+                 <span className="text-xs">{dayNum}</span>
                  
                  {/* Indicators */}
-                 <div className="flex gap-1 mt-1.5 flex-wrap justify-center px-1">
+                 <div className="flex gap-0.5 mt-1 flex-wrap justify-center px-0.5">
                     {/* Workout: Blue usually, or Theme color if selected? Let's keep distinct colors for types. */}
                     {stats.hasWorkout && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white/80' : 'bg-blue-400'}`} title="Workout"></div>}
                     
@@ -151,7 +151,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                  </div>
 
                  {stats.calories > 0 && (
-                   <div className={`mt-auto mb-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : stats.isGoalMet ? 'text-emerald-700 bg-emerald-100/50 dark:bg-emerald-900/50 dark:text-emerald-300' : 'text-gray-400 bg-gray-100 dark:bg-gray-700 dark:text-gray-400'}`}>
+                   <div className={`mt-auto mb-1 text-[8px] font-bold px-1 py-0 rounded-full ${isSelected ? 'bg-white/20 text-white' : stats.isGoalMet ? 'text-emerald-700 bg-emerald-100/50 dark:bg-emerald-900/50 dark:text-emerald-300' : 'text-gray-400 bg-gray-100 dark:bg-gray-700 dark:text-gray-400'}`}>
                      {stats.calories}
                    </div>
                  )}

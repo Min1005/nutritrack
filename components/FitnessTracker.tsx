@@ -132,31 +132,31 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
       
       {/* Workout Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 transition-colors">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 transition-colors">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-base font-bold text-gray-800 dark:text-white flex items-center gap-2">
             <span>💪</span> Workouts
           </h3>
           <button 
             onClick={() => setShowAdvisor(true)}
-            className={`text-sm ${themeConfig.gradient} text-white px-3 py-1.5 rounded-lg hover:shadow-lg transition flex items-center gap-1 font-bold`}
+            className={`text-xs ${themeConfig.gradient} text-white px-2 py-1 rounded hover:shadow-lg transition flex items-center gap-1 font-bold`}
           >
             <span>✨</span> AI Coach
           </button>
         </div>
 
         {/* Add Workout Form */}
-        <form onSubmit={handleAddWorkout} className={`mb-6 ${themeConfig.lightBg} p-4 rounded-lg border ${themeConfig.border} relative transition-colors`}>
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+        <form onSubmit={handleAddWorkout} className={`mb-4 ${themeConfig.lightBg} p-3 rounded-lg border ${themeConfig.border} relative transition-colors`}>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
              <div className="md:col-span-2 relative" ref={dropdownRef}>
-               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Exercise (動作) <span className="text-red-500">*</span></label>
+               <label className="block text-[10px] font-semibold text-gray-500 dark:text-gray-400 mb-0.5">Exercise (動作) <span className="text-red-500">*</span></label>
                <input 
                  type="text" 
                  placeholder="e.g. Bench Press"
-                 className={`w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 ${themeConfig.ring} focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all`}
+                 className={`w-full border rounded-md p-1.5 text-sm focus:outline-none focus:ring-2 ${themeConfig.ring} focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all`}
                  value={exercise}
                  onChange={handleExerciseChange}
                  onFocus={() => { if (exercise) setShowSuggestions(true); }}
@@ -181,13 +181,13 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
                )}
              </div>
              
-             <div className="grid grid-cols-3 gap-3 md:col-span-2">
+             <div className="grid grid-cols-3 gap-2 md:col-span-2">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Sets (組數) <span className="text-red-500">*</span></label>
+                  <label className="block text-[10px] font-semibold text-gray-500 dark:text-gray-400 mb-0.5">Sets <span className="text-red-500">*</span></label>
                   <input 
                     type="number" 
                     placeholder="4"
-                    className={`w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 ${themeConfig.ring} focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all`}
+                    className={`w-full border rounded-md p-1.5 text-sm focus:outline-none focus:ring-2 ${themeConfig.ring} focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all`}
                     value={sets}
                     onChange={e => setSets(e.target.value)}
                     required
@@ -195,11 +195,11 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Reps (次數) <span className="text-red-500">*</span></label>
+                  <label className="block text-[10px] font-semibold text-gray-500 dark:text-gray-400 mb-0.5">Reps <span className="text-red-500">*</span></label>
                   <input 
                     type="number" 
                     placeholder="10"
-                    className={`w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 ${themeConfig.ring} focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all`}
+                    className={`w-full border rounded-md p-1.5 text-sm focus:outline-none focus:ring-2 ${themeConfig.ring} focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all`}
                     value={reps}
                     onChange={e => setReps(e.target.value)}
                     required
@@ -207,11 +207,11 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Weight (kg) <span className="text-red-500">*</span></label>
+                  <label className="block text-[10px] font-semibold text-gray-500 dark:text-gray-400 mb-0.5">Weight (kg) <span className="text-red-500">*</span></label>
                   <input 
                     type="number" 
                     placeholder="60"
-                    className={`w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 ${themeConfig.ring} focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all`}
+                    className={`w-full border rounded-md p-1.5 text-sm focus:outline-none focus:ring-2 ${themeConfig.ring} focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all`}
                     value={weight}
                     onChange={e => setWeight(e.target.value)}
                     required
@@ -224,7 +224,7 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
            
            <div className="flex justify-between items-center mt-2">
               <select 
-                className="border rounded-lg p-2 text-xs bg-white text-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                className="border rounded-md p-1.5 text-xs bg-white text-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
                 value={selectedTag}
                 onChange={e => setSelectedTag(e.target.value)}
               >
@@ -233,7 +233,7 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
               <button 
                 type="submit"
                 disabled={!isFormValid}
-                className={`px-6 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all ${
+                className={`px-4 py-1.5 rounded-md text-xs font-semibold shadow-sm transition-all ${
                   isFormValid 
                     ? `${themeConfig.gradient} text-white hover:opacity-90` 
                     : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
@@ -245,36 +245,36 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
         </form>
 
         {/* Workout List */}
-        <div className="space-y-2">
+        <div className="space-y-1">
           {workouts.length === 0 ? (
-            <p className="text-center text-gray-400 text-sm py-4">No workouts recorded today.</p>
+            <p className="text-center text-gray-400 text-xs py-2">No workouts recorded today.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
+                <thead className="text-[10px] text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
                   <tr>
-                    <th className="px-3 py-2">Exercise</th>
-                    <th className="px-3 py-2 text-center">Sets</th>
-                    <th className="px-3 py-2 text-center">Reps</th>
-                    <th className="px-3 py-2 text-center">Weight</th>
-                    <th className="px-3 py-2"></th>
+                    <th className="px-2 py-1.5">Exercise</th>
+                    <th className="px-2 py-1.5 text-center">Sets</th>
+                    <th className="px-2 py-1.5 text-center">Reps</th>
+                    <th className="px-2 py-1.5 text-center">Weight</th>
+                    <th className="px-2 py-1.5"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {workouts.map(w => (
                     <tr key={w.id} className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="px-3 py-3 font-medium text-gray-900 dark:text-gray-200">
+                      <td className="px-2 py-2 font-medium text-gray-900 dark:text-gray-200">
                         {w.exercise || (w as any).name} 
                         {/* Fallback for legacy data */}
-                        <div className="text-xs text-gray-400 font-normal">
+                        <div className="text-[10px] text-gray-400 font-normal">
                           {w.tags.join(', ')}
                         </div>
                       </td>
-                      <td className="px-3 py-3 text-center text-gray-600 dark:text-gray-400">{w.sets || '-'}</td>
-                      <td className="px-3 py-3 text-center text-gray-600 dark:text-gray-400">{w.reps || '-'}</td>
-                      <td className="px-3 py-3 text-center text-gray-600 dark:text-gray-400">{w.weight ? `${w.weight}kg` : '-'}</td>
-                      <td className="px-3 py-3 text-right">
-                        <button onClick={() => onDeleteWorkout(w.id)} className="text-red-400 hover:text-red-600 dark:hover:text-red-300 px-2 font-bold">
+                      <td className="px-2 py-2 text-center text-gray-600 dark:text-gray-400">{w.sets || '-'}</td>
+                      <td className="px-2 py-2 text-center text-gray-600 dark:text-gray-400">{w.reps || '-'}</td>
+                      <td className="px-2 py-2 text-center text-gray-600 dark:text-gray-400">{w.weight ? `${w.weight}kg` : '-'}</td>
+                      <td className="px-2 py-2 text-right">
+                        <button onClick={() => onDeleteWorkout(w.id)} className="text-red-400 hover:text-red-600 dark:hover:text-red-300 px-1 font-bold">
                           ×
                         </button>
                       </td>
@@ -288,9 +288,9 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
       </div>
 
       {/* Body Check Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 transition-colors">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 transition-colors">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-base font-bold text-gray-800 dark:text-white flex items-center gap-2">
             <span>📸</span> Body Check
           </h3>
           <input 
@@ -303,15 +303,15 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
           <button 
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className={`text-sm ${themeConfig.gradient} text-white px-3 py-1.5 rounded-lg hover:opacity-90 disabled:opacity-50`}
+            className={`text-xs ${themeConfig.gradient} text-white px-2 py-1 rounded hover:opacity-90 disabled:opacity-50`}
           >
             {isUploading ? 'Uploading...' : '+ Add Photo'}
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-2">
            {bodyChecks.length === 0 ? (
-             <div className="col-span-2 text-center text-gray-400 text-sm py-8 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
+             <div className="col-span-2 text-center text-gray-400 text-xs py-4 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
                Upload a photo to track your physique.
              </div>
            ) : (
@@ -328,7 +328,7 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({
              ))
            )}
         </div>
-        <p className="text-xs text-gray-400 mt-2 text-center">Photos are stored locally on this device.</p>
+        <p className="text-[10px] text-gray-400 mt-2 text-center">Photos are stored locally on this device.</p>
       </div>
 
       {/* Advisor Modal */}

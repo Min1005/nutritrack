@@ -61,24 +61,24 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({ user, logs, dailyStats,
   const weightDomain = [Math.floor(minWeight - 1), Math.ceil(maxWeight + 1)];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="space-y-2">
       
       {/* Header */}
-      <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm transition-colors">
+      <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm transition-colors">
         <button onClick={onBack} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-gray-500 dark:text-gray-400">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         </button>
         <div className="flex-1">
-           <h2 className="text-xl font-bold text-gray-800 dark:text-white">Trends & Analytics</h2>
+           <h2 className="text-lg font-bold text-gray-800 dark:text-white">Trends & Analytics</h2>
            <p className="text-xs text-gray-500 dark:text-gray-400">Track your progress over time</p>
         </div>
         
-        <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg transition-colors">
+        <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-md transition-colors">
            {(['7', '30', '90'] as TimeRange[]).map(r => (
              <button
                key={r}
                onClick={() => setRange(r)}
-               className={`px-3 py-1 text-xs font-bold rounded-md transition ${range === r ? 'bg-white dark:bg-gray-600 shadow-sm ' + themeConfig.text : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+               className={`px-2 py-1 text-xs font-bold rounded transition ${range === r ? 'bg-white dark:bg-gray-600 shadow-sm ' + themeConfig.text : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
              >
                {r} Days
              </button>
@@ -87,41 +87,41 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({ user, logs, dailyStats,
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-emerald-50 dark:border-emerald-900/30 transition-colors">
-            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Avg Calories</p>
-            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{averageCals}</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500">Target: {user.targetCalories}</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+         <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm border border-emerald-50 dark:border-emerald-900/30 transition-colors">
+            <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-semibold">Avg Calories</p>
+            <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{averageCals}</p>
+            <p className="text-[10px] text-gray-400 dark:text-gray-500">Target: {user.targetCalories}</p>
          </div>
-         <div className={`bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-50 dark:border-gray-700 transition-colors`}>
-            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Latest Weight</p>
-            <p className={`text-2xl font-bold ${themeConfig.text}`}>{recordedWeights.length > 0 ? recordedWeights[recordedWeights.length - 1] : user.weight} <span className="text-sm">kg</span></p>
+         <div className={`bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm border border-gray-50 dark:border-gray-700 transition-colors`}>
+            <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-semibold">Latest Weight</p>
+            <p className={`text-xl font-bold ${themeConfig.text}`}>{recordedWeights.length > 0 ? recordedWeights[recordedWeights.length - 1] : user.weight} <span className="text-sm">kg</span></p>
          </div>
-         <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-purple-50 dark:border-purple-900/30 transition-colors">
-            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Weight Change</p>
-            <p className={`text-2xl font-bold ${recordedWeights.length > 1 ? (recordedWeights[recordedWeights.length - 1] - recordedWeights[0] < 0 ? 'text-green-500' : 'text-red-500') : 'text-gray-600 dark:text-gray-400'}`}>
+         <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm border border-purple-50 dark:border-purple-900/30 transition-colors">
+            <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-semibold">Weight Change</p>
+            <p className={`text-xl font-bold ${recordedWeights.length > 1 ? (recordedWeights[recordedWeights.length - 1] - recordedWeights[0] < 0 ? 'text-green-500' : 'text-red-500') : 'text-gray-600 dark:text-gray-400'}`}>
               {recordedWeights.length > 1 ? (recordedWeights[recordedWeights.length - 1] - recordedWeights[0]).toFixed(1) : '0'} <span className="text-sm">kg</span>
             </p>
          </div>
-         <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-orange-50 dark:border-orange-900/30 transition-colors">
-            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Log Streak</p>
-            <p className="text-2xl font-bold text-orange-500">{data.filter(d => d.calories > 0).length} <span className="text-sm">days</span></p>
+         <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm border border-orange-50 dark:border-orange-900/30 transition-colors">
+            <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-semibold">Log Streak</p>
+            <p className="text-xl font-bold text-orange-500">{data.filter(d => d.calories > 0).length} <span className="text-sm">days</span></p>
          </div>
       </div>
 
       {/* Weight Chart */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md transition-colors">
-        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm transition-colors">
+        <h3 className="text-sm font-bold text-gray-800 dark:text-white mb-2 flex items-center gap-2">
           <span>⚖️</span> Weight Trend
         </h3>
-        <div className="h-64 w-full">
+        <div className="h-56 w-full">
            <ResponsiveContainer width="100%" height="100%">
-             <LineChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+             <LineChart data={data} margin={{ top: 5, right: 10, bottom: 0, left: -20 }}>
                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" opacity={0.3} />
                <XAxis 
                  dataKey="displayDate" 
                  tick={{fontSize: 10, fill: '#9CA3AF'}} 
-                 tickMargin={10} 
+                 tickMargin={5} 
                  minTickGap={30}
                  axisLine={{stroke: '#e5e7eb', opacity: 0.3}}
                  tickLine={false}
@@ -134,7 +134,7 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({ user, logs, dailyStats,
                  tickLine={false}
                />
                <Tooltip 
-                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', backgroundColor: '#1F2937', color: '#F3F4F6' }}
+                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', backgroundColor: '#1F2937', color: '#F3F4F6', fontSize: '12px' }}
                  itemStyle={{ color: '#F3F4F6' }}
                  formatter={(value: number) => [`${value} kg`, 'Weight']}
                />
@@ -142,9 +142,9 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({ user, logs, dailyStats,
                  type="monotone" 
                  dataKey="weight" 
                  stroke={themeConfig.hex} 
-                 strokeWidth={3} 
-                 dot={{r: 4, strokeWidth: 2, fill: themeConfig.hex}} 
-                 activeDot={{r: 6}}
+                 strokeWidth={2} 
+                 dot={{r: 3, strokeWidth: 1, fill: themeConfig.hex}} 
+                 activeDot={{r: 5}}
                  connectNulls 
                />
              </LineChart>
@@ -153,18 +153,18 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({ user, logs, dailyStats,
       </div>
 
       {/* Calorie Chart */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md transition-colors">
-        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm transition-colors">
+        <h3 className="text-sm font-bold text-gray-800 dark:text-white mb-2 flex items-center gap-2">
           <span>🔥</span> Calorie History
         </h3>
-        <div className="h-64 w-full">
+        <div className="h-56 w-full">
            <ResponsiveContainer width="100%" height="100%">
-             <ComposedChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+             <ComposedChart data={data} margin={{ top: 5, right: 10, bottom: 0, left: -20 }}>
                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" opacity={0.3} />
                <XAxis 
                  dataKey="displayDate" 
                  tick={{fontSize: 10, fill: '#9CA3AF'}} 
-                 tickMargin={10} 
+                 tickMargin={5} 
                  minTickGap={30}
                  axisLine={{stroke: '#e5e7eb', opacity: 0.3}}
                  tickLine={false}
@@ -175,12 +175,12 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({ user, logs, dailyStats,
                  tickLine={false}
                />
                <Tooltip 
-                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', backgroundColor: '#1F2937', color: '#F3F4F6' }}
+                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', backgroundColor: '#1F2937', color: '#F3F4F6', fontSize: '12px' }}
                  itemStyle={{ color: '#F3F4F6' }}
                />
-               <Legend wrapperStyle={{fontSize: '12px', color: '#9CA3AF'}} />
+               <Legend wrapperStyle={{fontSize: '10px', color: '#9CA3AF'}} />
                
-               <Bar dataKey="calories" fill="#34D399" radius={[4, 4, 0, 0]} name="Intake" barSize={20} />
+               <Bar dataKey="calories" fill="#34D399" radius={[3, 3, 0, 0]} name="Intake" barSize={12} />
                
                {/* Goal Line */}
                <Line 
@@ -190,7 +190,7 @@ const StatisticsView: React.FC<StatisticsViewProps> = ({ user, logs, dailyStats,
                  strokeWidth={2} 
                  dot={false} 
                  name="Target" 
-                 strokeDasharray="5 5"
+                 strokeDasharray="4 4"
                />
              </ComposedChart>
            </ResponsiveContainer>

@@ -36,6 +36,7 @@ const App: React.FC = () => {
   // UI States
   const [showMenu, setShowMenu] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [reminderTimes, setReminderTimes] = useState({ lunch: '12:00', dinner: '19:00' });
 
   // Modal States
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -67,6 +68,10 @@ const App: React.FC = () => {
        }
     }
 
+    // Load Reminders
+    const times = NotificationService.getReminderTimes();
+    setReminderTimes(times);
+
     // Start Notification Scheduler (Check every minute)
     const notificationInterval = setInterval(() => {
       NotificationService.checkAndTriggerReminders();
@@ -82,6 +87,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (showMenu) {
       setNotificationsEnabled(NotificationService.isEnabled());
+      setReminderTimes(NotificationService.getReminderTimes());
     }
   }, [showMenu]);
 
@@ -227,12 +233,16 @@ const App: React.FC = () => {
       if (granted) {
         NotificationService.setPreference(true);
         setNotificationsEnabled(true);
-        alert("Reminders enabled! You will be notified at 12:00 PM and 7:00 PM.");
       } else {
         alert("Permission denied. Please enable notifications in your browser settings.");
       }
     }
-    // Don't close menu immediately so they can see the toggle switch state
+  };
+
+  const handleReminderTimeChange = (type: 'lunch' | 'dinner', value: string) => {
+     const newTimes = { ...reminderTimes, [type]: value };
+     setReminderTimes(newTimes);
+     NotificationService.setReminderTimes(newTimes.lunch, newTimes.dinner);
   };
 
   const handleDateSelect = (date: string) => {
@@ -472,7 +482,7 @@ const App: React.FC = () => {
                 {showMenu && (
                   <>
                     <div className="fixed inset-0 z-10 cursor-default" onClick={() => setShowMenu(false)}></div>
-                    <div className="absolute right-0 top-full mt-3 w-72 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-20 py-2 animate-fade-in overflow-hidden transition-colors">
+                    <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-20 py-2 animate-fade-in overflow-hidden transition-colors">
                       <div className="px-4 py-2 border-b border-gray-50 dark:border-gray-700 mb-1">
                           <p className="text-xs font-bold text-gray-400 uppercase">Menu</p>
                       </div>
@@ -524,13 +534,45 @@ const App: React.FC = () => {
                         <span>✏️</span> Edit Profile
                       </button>
 
-                      <button 
-                        onClick={handleToggleNotifications}
-                        className={`w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:${currentTheme.lightBg} flex items-center gap-3 transition`}
-                      >
-                        <span>{notificationsEnabled ? '🔕' : '🔔'}</span> 
-                        {notificationsEnabled ? 'Disable Reminders' : 'Enable Reminders'}
-                      </button>
+                      {/* Notifications */}
+                      <div className="px-4 py-2">
+                        <button 
+                          onClick={handleToggleNotifications}
+                          className={`w-full text-left py-2 text-sm text-gray-700 dark:text-gray-300 hover:${currentTheme.lightBg} flex items-center justify-between gap-3 transition rounded-lg`}
+                        >
+                          <div className="flex items-center gap-3">
+                             <span>{notificationsEnabled ? '🔔' : '🔕'}</span> 
+                             <span>Reminders</span>
+                          </div>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${notificationsEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                            {notificationsEnabled ? 'ON' : 'OFF'}
+                          </span>
+                        </button>
+                        
+                        {/* Time Pickers */}
+                        {notificationsEnabled && (
+                          <div className="mt-2 pl-8 space-y-2 animate-fade-in">
+                            <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+                              <span>Lunch</span>
+                              <input 
+                                type="time" 
+                                value={reminderTimes.lunch}
+                                onChange={(e) => handleReminderTimeChange('lunch', e.target.value)}
+                                className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded px-2 py-1 focus:outline-none focus:border-emerald-500"
+                              />
+                            </div>
+                            <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+                              <span>Dinner</span>
+                              <input 
+                                type="time" 
+                                value={reminderTimes.dinner}
+                                onChange={(e) => handleReminderTimeChange('dinner', e.target.value)}
+                                className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded px-2 py-1 focus:outline-none focus:border-emerald-500"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
                       
                       <button 
                         onClick={handleExportData}
@@ -555,7 +597,7 @@ const App: React.FC = () => {
         </div>
       </nav>
 
-      <main className="p-4">
+      <main className="p-2 max-w-4xl mx-auto">
         {currentUser && renderMainContent()}
       </main>
 
